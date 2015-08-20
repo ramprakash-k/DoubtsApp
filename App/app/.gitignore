@@ -1,0 +1,7 @@
+/build/generated
+/build/intermediates
+/build/outputs/logs
+/build/tmp
+/app.iml
+/build.gradle
+/proguard-rules.pro

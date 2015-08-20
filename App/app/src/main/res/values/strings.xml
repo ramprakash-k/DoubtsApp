@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">DoubtsApp</string>
+    <string name="logout_image">Logout Button</string>
+    <string name="filter_image">Filter Button</string>
+    <string name="compose_image">Compose Button</string>
+    <string name="connect">Connect</string>
+    <string name="ip_hint">Enter IP address</string>
+    <string name="port_hint">Enter Port</string>
+</resources>
