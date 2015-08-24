@@ -3,4 +3,5 @@
     <dimen name="default_margin">16dp</dimen>
     <dimen name="half_default_margin">8dp</dimen>
     <dimen name="half_plus_1_margin">9dp</dimen>
+    <dimen name="text_size">5sp</dimen>
 </resources>

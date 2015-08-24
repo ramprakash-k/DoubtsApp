@@ -1,6 +1,7 @@
 package doubtsapp;
 
 import android.app.Fragment;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +17,11 @@ import in.ac.iitb.doubtsapp.R;
  */
 public class DoubtsFragment extends Fragment {
     private DoubtsListAdapter doubtsListAdapter;
+    private View.OnClickListener addDoubtListener;
+
+    public void setAddDoubtListener(View.OnClickListener listener) {
+        addDoubtListener = listener;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstance) {
@@ -23,17 +29,10 @@ public class DoubtsFragment extends Fragment {
         doubtsListAdapter = new DoubtsListAdapter();
         ListView listView = (ListView) view.findViewById(R.id.doubts_list);
         listView.setAdapter(doubtsListAdapter);
-        view.findViewById(R.id.compose_button).setOnClickListener(
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Toast.makeText(v.getContext(),"Not yet built",Toast.LENGTH_SHORT).show();
-                    }
-                }
-        );
-        for (int i = 1; i <= 5; i++) {
-            addDoubt("Doubt" + i);
-        }
+        view.findViewById(R.id.compose_button).setOnClickListener(addDoubtListener);
+//        for (int i = 1; i <= 5; i++) {
+//            addDoubt("Doubt" + i);
+//        }
         return view;
     }
 

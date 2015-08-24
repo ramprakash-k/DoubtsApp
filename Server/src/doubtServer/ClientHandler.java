@@ -23,7 +23,8 @@ public class ClientHandler implements Observer, Runnable {
 	public void update(Observable o, Object arg) {
 		if (o == broadcaster && arg instanceof String) {
 			try {
-				out.writeBytes((String)arg);
+				System.out.println("sending message : " + (String)arg);
+				out.writeBytes((String)arg + "\n");
 			} catch (IOException e) {
 				broadcaster.deleteObserver(this);
 			}
@@ -35,15 +36,29 @@ public class ClientHandler implements Observer, Runnable {
 		while (!client.isClosed()) {
 			try {
 				String input = in.readLine();
-				broadcaster.broadcastMessage(input);
-			} catch(Exception e) {
-				try {
-					client.close();
-				} catch (Exception e1) {
-					e1.printStackTrace();
+				if (input!=null) {
+					System.out.println("message received : " + input);
+					if (input.equals("I'm Out")) {
+						disconnect();
+					} else {
+						broadcaster.broadcastMessage(input);
+					}
+				} else {
+					System.out.println("null received");
+					disconnect();
 				}
-				broadcaster.deleteObserver(this);
+			} catch(Exception e) {
+				disconnect();
 			}
 		}
+	}
+	
+	private void disconnect() {
+		try {
+			client.close();
+		} catch (Exception e1) {
+			e1.printStackTrace();
+		}
+		broadcaster.deleteObserver(this);
 	}
 }

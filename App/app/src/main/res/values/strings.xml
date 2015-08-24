@@ -6,4 +6,6 @@
     <string name="connect">Connect</string>
     <string name="ip_hint">Enter IP address</string>
     <string name="port_hint">Enter Port</string>
+    <string name="add_doubt_title">Post your Doubt</string>
+    <string name="doubt_hint">Enter your Doubt</string>
 </resources>
