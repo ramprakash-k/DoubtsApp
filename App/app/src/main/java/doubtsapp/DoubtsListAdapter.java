@@ -18,7 +18,7 @@ import in.ac.iitb.doubtsapp.R;
  */
 public class DoubtsListAdapter extends BaseAdapter {
 
-    List<String> doubts;
+    List<Doubt> doubts;
     Boolean isFooterEnabled = false;
 
     public DoubtsListAdapter() {
@@ -30,7 +30,7 @@ public class DoubtsListAdapter extends BaseAdapter {
 //        notifyDataSetChanged();
 //    }
 
-    public void addDoubt(String doubt) {
+    public void addDoubt(Doubt doubt) {
         doubts.add(doubt);
         if (getCount() > 9) isFooterEnabled = true;
         notifyDataSetChanged();
@@ -47,11 +47,11 @@ public class DoubtsListAdapter extends BaseAdapter {
     }
 
     @Override
-    public String getItem(int position) {
+    public Doubt getItem(int position) {
         if (position < doubts.size())
             return doubts.get(position);
         else
-            return "FOOTER_VIEW";
+            return null;
     }
 
     @Override
@@ -70,7 +70,11 @@ public class DoubtsListAdapter extends BaseAdapter {
             view = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.doubts_list_item,parent, false);
         }
-        ((TextView) view.findViewById(R.id.doubt_text)).setText(getItem(position));
+        Doubt doubt = getItem(position);
+        ((TextView) view.findViewById(R.id.doubt_text))
+            .setText((doubt.userId != null)
+                ? doubt.userId + " : " + doubt.doubt
+                : doubt.doubt);
         return view;
     }
 

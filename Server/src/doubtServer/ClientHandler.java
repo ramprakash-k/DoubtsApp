@@ -38,7 +38,8 @@ public class ClientHandler implements Observer, Runnable {
 				String input = in.readLine();
 				if (input!=null) {
 					System.out.println("message received : " + input);
-					if (input.equals("I'm Out")) {
+					String info[] = input.split("[|]");
+					if (info[info.length - 1].equals("I'm Out")) {
 						disconnect();
 					} else {
 						broadcaster.broadcastMessage(input);

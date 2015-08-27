@@ -6,7 +6,6 @@
     >
 
     <LinearLayout
-        android:background="#0000ff"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
@@ -14,6 +13,7 @@
         <ImageView
             android:id="@+id/logout_button"
             android:contentDescription="@string/logout_image"
+            android:background="@drawable/titlebar_button_bg"
             android:layout_width="50dp"
             android:layout_height="match_parent"
             android:padding="4dp"
@@ -22,6 +22,7 @@
             />
 
         <TextView
+            android:background="#0000ff"
             android:gravity="center_horizontal"
             android:layout_width="0dp"
             android:layout_weight="1"
@@ -36,6 +37,7 @@
         <ImageView
             android:id="@+id/filter_button"
             android:contentDescription="@string/filter_image"
+            android:background="@drawable/titlebar_button_bg"
             android:layout_width="50dp"
             android:layout_height="match_parent"
             android:padding="6dp"

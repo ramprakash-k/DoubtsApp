@@ -17,11 +17,6 @@ import in.ac.iitb.doubtsapp.R;
  */
 public class DoubtsFragment extends Fragment {
     private DoubtsListAdapter doubtsListAdapter;
-    private View.OnClickListener addDoubtListener;
-
-    public void setAddDoubtListener(View.OnClickListener listener) {
-        addDoubtListener = listener;
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstance) {
@@ -29,14 +24,19 @@ public class DoubtsFragment extends Fragment {
         doubtsListAdapter = new DoubtsListAdapter();
         ListView listView = (ListView) view.findViewById(R.id.doubts_list);
         listView.setAdapter(doubtsListAdapter);
-        view.findViewById(R.id.compose_button).setOnClickListener(addDoubtListener);
-//        for (int i = 1; i <= 5; i++) {
-//            addDoubt("Doubt" + i);
-//        }
+        view.findViewById(R.id.compose_button).setOnClickListener(
+            new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    AddDoubtsPrompt prompt = new AddDoubtsPrompt();
+                    prompt.show(getActivity().getFragmentManager(), null);
+                }
+            }
+        );
         return view;
     }
 
-    public void addDoubt(String doubt) {
+    public void addDoubt(Doubt doubt) {
         doubtsListAdapter.addDoubt(doubt);
     }
 
