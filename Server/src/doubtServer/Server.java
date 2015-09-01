@@ -4,7 +4,7 @@ import java.io.*;
 import java.net.*;
 
 public class Server {
-
+	
 	public static void main(String[] args) {
         
 		if (args.length != 1) {
@@ -20,12 +20,13 @@ public class Server {
 			System.exit(1);
 		}
 		final Broadcaster broadcaster = new Broadcaster();
+		final DoubtHandler doubtHandler = new DoubtHandler();
 		System.out.println("Server started at port number "+Integer.toString(portNumber));
 		while (true) {
 			try {
 				Socket clientSocket = serverSocket.accept();
 				System.out.println(clientSocket.getInetAddress().getHostAddress() + " connected.");
-				new Thread(new ClientHandler(clientSocket,broadcaster)).start();
+				new Thread(new ClientHandler(clientSocket,broadcaster,doubtHandler)).start();
 			} catch(IOException e) {
 				try {
 					serverSocket.close();

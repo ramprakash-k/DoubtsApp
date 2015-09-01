@@ -5,10 +5,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import in.ac.iitb.doubtsapp.R;
 
@@ -18,22 +19,40 @@ import in.ac.iitb.doubtsapp.R;
  */
 public class DoubtsListAdapter extends BaseAdapter {
 
-    List<Doubt> doubts;
-    Boolean isFooterEnabled = false;
+    private List<Doubt> doubts;
+    private Map<Integer,Integer> idToPositionMap;
+    private DoubtItemViewBinder.DoubtHandler doubtHandler;
 
-    public DoubtsListAdapter() {
+    public DoubtsListAdapter(DoubtItemViewBinder.DoubtHandler doubtHandler) {
         doubts = new ArrayList<>();
+        idToPositionMap = new HashMap<>();
+        this.doubtHandler = doubtHandler;
     }
 
-//    public void addDoubts(ArrayList<String> doubts) {
-//        this.doubts.addAll(doubts);
-//        notifyDataSetChanged();
-//    }
-
     public void addDoubt(Doubt doubt) {
+        idToPositionMap.put(doubt.DoubtId, doubts.size());
         doubts.add(doubt);
-        if (getCount() > 9) isFooterEnabled = true;
         notifyDataSetChanged();
+    }
+
+    public void deleteDoubt(int doubtId) {
+        int position = idToPositionMap.remove(doubtId);
+        doubts.remove(position);
+        for (int i = position ; i < doubts.size(); i++) {
+            idToPositionMap.put(doubts.get(i).DoubtId, i);
+        }
+        notifyDataSetChanged();
+    }
+
+    public void updateDoubt(int doubtId, int newCnt, boolean userChange, boolean isUpvote) {
+        Doubt doubt = doubts.get(idToPositionMap.get(doubtId));
+        doubt.upVotesCount = newCnt;
+        if (userChange) doubt.hasUserUpVoted = isUpvote;
+        notifyDataSetChanged();
+    }
+
+    public String getDoubt(int doubtId) {
+        return doubts.get(idToPositionMap.get(doubtId)).getDoubt();
     }
 
     public void clearAll() {
@@ -43,15 +62,12 @@ public class DoubtsListAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return doubts.size() + (isFooterEnabled ? 1 : 0);
+        return doubts.size();
     }
 
     @Override
     public Doubt getItem(int position) {
-        if (position < doubts.size())
-            return doubts.get(position);
-        else
-            return null;
+        return doubts.get(position);
     }
 
     @Override
@@ -61,30 +77,11 @@ public class DoubtsListAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        if (position == getCount() - 1 && isFooterEnabled) {
-            return LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.doubt_list_footer, parent, false);
-        }
-        View view = convertView;
         if (convertView == null) {
-            view = LayoutInflater.from(parent.getContext())
+            convertView = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.doubts_list_item,parent, false);
         }
-        Doubt doubt = getItem(position);
-        ((TextView) view.findViewById(R.id.doubt_text))
-            .setText((doubt.userId != null)
-                ? doubt.userId + " : " + doubt.doubt
-                : doubt.doubt);
-        return view;
-    }
-
-    @Override
-    public int getItemViewType(int position) {
-        return (position == getCount() - 1 && isFooterEnabled) ? 1 : 0;
-    }
-
-    @Override
-    public int getViewTypeCount() {
-        return (isFooterEnabled ? 2 : 1);
+        DoubtItemViewBinder.bind(convertView, getItem(position), doubtHandler);
+        return convertView;
     }
 }

@@ -2,13 +2,11 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
-            <size android:height="@dimen/half_plus_1_margin"/>
             <solid android:color="#006eff"/>
         </shape>
     </item>
     <item android:bottom="1dp">
         <shape android:shape="rectangle">
-            <size android:height="@dimen/half_default_margin"/>
             <solid android:color="#0088ff"/>
         </shape>
     </item>

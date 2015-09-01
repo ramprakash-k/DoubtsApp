@@ -1,5 +1,6 @@
 package doubtsapp;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -7,6 +8,9 @@ import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
@@ -19,7 +23,9 @@ import in.ac.iitb.doubtsapp.R;
 
 public class MainActivity
     extends Activity
-    implements AddDoubtsPrompt.PostDoubtListener, LDAPLoginPrompt.PostLoginListener {
+    implements AddDoubtsPrompt.PostDoubtListener,
+        LDAPLoginPrompt.PostLoginListener,
+        DoubtItemViewBinder.DoubtHandler {
 
     private enum STATE {
         CONNECT,
@@ -33,7 +39,8 @@ public class MainActivity
     private boolean isConnected = false;
     private Socket server;
     private DoubtInAsync doubtInAsync;
-    private String userId;
+    private String name;
+    private String rollNo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,7 +119,8 @@ public class MainActivity
                 logoutButton.setVisibility(View.GONE);
                 filterButton.setVisibility(View.GONE);
                 isConnected = false;
-                userId = null;
+                rollNo = null;
+                name = null;
                 doubtsFragment.clearAll();
                 break;
         }
@@ -163,9 +171,35 @@ public class MainActivity
     }
 
     @Override
-    public void onPostLoginSuccess(String userId) {
-        this.userId = userId;
+    public void onPostLoginSuccess(String userId, String cn) {
+        rollNo = userId;
+        new DoubtOutAsync().executeOnExecutor(
+            AsyncTask.THREAD_POOL_EXECUTOR,
+            rollNo,
+            "Roll");
         Toast.makeText(this, "Login Success", Toast.LENGTH_SHORT).show();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        @SuppressLint("InflateParams")
+        final EditText text =
+            (EditText) getLayoutInflater().inflate(R.layout.add_doubt_prompt, null);
+        text.setHint(getString(R.string.name_hint));
+        text.setText(cn);
+        text.setLines(1);
+        text.setInputType(EditorInfo.TYPE_CLASS_TEXT);
+        builder
+            .setTitle(getString(R.string.name_title))
+            .setView(text)
+            .setPositiveButton("Confirm",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        MainActivity.this.name = text.getText().toString();
+                    }
+                });
+        AlertDialog dialog = builder.create();
+        dialog.setCancelable(false);
+        dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+        dialog.show();
     }
 
     @Override
@@ -207,19 +241,60 @@ public class MainActivity
         protected void onProgressUpdate(String... doubts) {
             String s = doubts[0];
             String info[] = s.split("[|]");
-            Doubt doubt = new Doubt();
-            if (info.length == 2) {
-                doubt.userId = info[0];
-                doubt.doubt = info[1];
-            } else {
-                doubt.doubt = info[0];
+            switch (info[0]) {
+                // Add | lines | name | roll | doubtLine1 | time | doubtId
+                case "Add":
+                    Doubt doubt = new Doubt();
+                    doubt.lines = Integer.parseInt(info[1]);
+                    doubt.linesReceived++;
+                    doubt.name = info[2];
+                    doubt.rollNo = info[3];
+                    if (rollNo.equals(doubt.rollNo)) {
+                        doubt.isOwnDoubt = true;
+                    } else {
+                        doubt.canUserUpVote = true;
+                    }
+                    doubt.setDoubtLine(1, info[4]);
+                    doubt.time = info[5];
+                    doubt.DoubtId = Integer.parseInt(info[6]);
+                    doubtsFragment.addDoubt(doubt);
+                    break;
+                // App | n | doubtLine(n) | doubtId
+                case "App":
+                    doubtsFragment.appendDoubt(
+                        Integer.parseInt(info[3]),
+                        Integer.parseInt(info[1]),
+                        info[2]);
+                    break;
+                // Up | roll | doubtId | newCnt
+                case "Up":
+                    doubtsFragment.updateUpvoteCount(
+                        Integer.parseInt(info[2]),
+                        Integer.parseInt(info[3]),
+                        rollNo.equals(info[1]),
+                        true);
+                    break;
+                // Nup | roll | doubtId | newCnt
+                case "Nup":
+                    doubtsFragment.updateUpvoteCount(
+                        Integer.parseInt(info[2]),
+                        Integer.parseInt(info[3]),
+                        rollNo.equals(info[1]),
+                        false);
+                    break;
+                // Del | doubtId | roll
+                case "Del":
+                    if (info[2].equals(rollNo)) {
+                        Toast.makeText(MainActivity.this, "Deleted", Toast.LENGTH_SHORT).show();
+                    }
+                    doubtsFragment.deleteDoubt(Integer.parseInt(info[1]));
+                    break;
             }
-            doubtsFragment.addDoubt(doubt);
         }
 
         @Override
         protected void onPostExecute(Void result) {
-            Toast.makeText(MainActivity.this, "Server closed", Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this, "Disconnected", Toast.LENGTH_SHORT).show();
             switchState(STATE.CONNECT);
         }
     }
@@ -228,23 +303,104 @@ public class MainActivity
     public void onPostDoubt(String doubt) {
         new DoubtOutAsync().executeOnExecutor(
             AsyncTask.THREAD_POOL_EXECUTOR,
-            doubt);
+            doubt,
+            "Add");
+    }
+
+    @Override
+    public void onUpVoteClick(int doubtId) {
+        new DoubtOutAsync().executeOnExecutor(
+            AsyncTask.THREAD_POOL_EXECUTOR,
+            Integer.toString(doubtId),
+            "Up");
+    }
+
+    @Override
+    public void onNupVoteClick(int doubtId) {
+        new DoubtOutAsync().executeOnExecutor(
+            AsyncTask.THREAD_POOL_EXECUTOR,
+            Integer.toString(doubtId),
+            "Nup");
+    }
+
+    @Override
+    public boolean onEditDoubt(final int doubtId) {
+        new AddDoubtsPrompt(this, new AddDoubtsPrompt.PostDoubtListener() {
+            @Override
+            public void onPostDoubt(String doubt) {
+                new DoubtOutAsync().executeOnExecutor(
+                    AsyncTask.THREAD_POOL_EXECUTOR,
+                    Integer.toString(doubtId),
+                    "Del",
+                    "-1"); // Don't show deleted toast
+                new DoubtOutAsync().executeOnExecutor(
+                    AsyncTask.THREAD_POOL_EXECUTOR,
+                    doubt,
+                    "Add");
+            }
+        }, doubtsFragment.getDoubt(doubtId)).create().show();
+        return false;
+    }
+
+    @Override
+    public boolean onDeleteDoubt(final int doubtId) {
+        new AlertDialog.Builder(this)
+            .setMessage(getString(R.string.delete_confirm))
+            .setCancelable(true)
+            .setPositiveButton("Confirm",
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        new DoubtOutAsync().executeOnExecutor(
+                            AsyncTask.THREAD_POOL_EXECUTOR,
+                            Integer.toString(doubtId),
+                            "Del",
+                            rollNo);
+                    }
+                })
+            .setNegativeButton("Cancel", null)
+            .create()
+            .show();
+        return true;
     }
 
     private class DoubtOutAsync extends AsyncTask<String,Void,Void> {
         @Override
         protected Void doInBackground(String... params) {
-            String doubt = (userId != null ? userId + "|" : "") + params[0] + "\n";
+            String msg = params[0];
             try {
                 DataOutputStream out = new DataOutputStream(
                     server.getOutputStream());
-                out.writeBytes(doubt);
-                if (doubt.equals("I'm Out\n")) {
+                if (msg.equals("I'm Out")) {
+                    out.writeBytes("I'm Out\n");
                     Thread.sleep(250);
                     server.close();
                     isConnected = false;
-                    if (params[1] == null) {
-                        switchState(STATE.CONNECT);
+                    if (params[1] == null) switchState(STATE.CONNECT);
+                } else {
+                    switch (params[1]) {
+                        case "Roll":
+                            out.writeBytes("I Am|" + msg + "\n");
+                            break;
+                        case "Add":
+                            String doubt[] = params[0].split("[\n]");
+                            int lines = doubt.length;
+                            out.writeBytes("Add|" + Integer.toString(lines) + "|"
+                                + name + "|" + rollNo + "|" + doubt[0] + "\n");
+                            for (int i = 2; i <= lines; i++) {
+                                out.writeBytes("App|" + Integer.toString(i) + "|"
+                                    + doubt[i - 1] + "\n");
+                            }
+                            break;
+                        case "Up":
+                            out.writeBytes("Up|" + rollNo + "|" + msg + "\n");
+                            break;
+                        case "Nup":
+                            out.writeBytes("Nup|" + rollNo + "|" + msg + "\n");
+                            break;
+                        case "Del":
+                            out.writeBytes("Del|" + msg + "|" + params[2] + "\n");
+                            break;
                     }
                 }
             } catch (Exception e) {

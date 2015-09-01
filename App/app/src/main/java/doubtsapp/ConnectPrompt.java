@@ -1,5 +1,6 @@
 package doubtsapp;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -21,6 +22,7 @@ public class ConnectPrompt extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstance) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
+        @SuppressLint("InflateParams")
         final View view = inflater.inflate(R.layout.connect_prompt, null);
         final EditText ipTextView = ((EditText) view.findViewById(R.id.ip_text));
         final EditText portView = ((EditText) view.findViewById(R.id.port_text));

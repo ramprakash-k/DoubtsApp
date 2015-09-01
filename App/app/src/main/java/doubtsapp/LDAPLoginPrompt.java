@@ -24,7 +24,7 @@ import in.ac.iitb.doubtsapp.R;
  */
 public class LDAPLoginPrompt extends DialogFragment {
     interface PostLoginListener {
-        void onPostLoginSuccess(String userId);
+        void onPostLoginSuccess(String userId, String cn);
         void onLoginCancelled();
         void onPostLoginFailed();
     }
@@ -76,19 +76,22 @@ public class LDAPLoginPrompt extends DialogFragment {
                                 if (user.isEmpty() || pass.isEmpty())
                                     listener.onPostLoginFailed();
                                 try {
-                                    LDAPConnection connection = new LDAPConnection("10.200.1.31", 389);
+                                    LDAPConnection connection =
+                                        new LDAPConnection("10.200.1.31", 389);
                                     Filter filter = Filter.createEqualityFilter("uid",user);
                                     SearchRequest request =
                                         new SearchRequest(
                                             "dc=iitb,dc=ac,dc=in",
                                             SearchScope.SUB,
                                             filter,
+                                            "employeeNumber",
                                             "cn");
                                     SearchResult result = connection.search(request);
                                     String dn = result.getSearchEntries().get(0).getDN();
-                                    String cn = result.getSearchEntries().get(0).getAttributeValue("cn");
                                     connection.bind(dn, pass);
-                                    listener.onPostLoginSuccess(cn);
+                                    listener.onPostLoginSuccess(
+                                        result.getSearchEntries().get(0).getAttributeValue("employeeNumber"),
+                                        result.getSearchEntries().get(0).getAttributeValue("cn"));
                                     dialog.dismiss();
                                 } catch (Exception e) {
                                     listener.onPostLoginFailed();

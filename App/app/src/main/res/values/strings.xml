@@ -3,12 +3,16 @@
     <string name="logout_image">Logout Button</string>
     <string name="filter_image">Filter Button</string>
     <string name="compose_image">Compose Button</string>
+    <string name="upvote_image">Upvote Button</string>
     <string name="connect">Connect</string>
     <string name="ip_hint">Enter IP address</string>
     <string name="port_hint">Enter Port</string>
+    <string name="name_title">Choose your display name</string>
+    <string name="name_hint">Enter your common name</string>
     <string name="doubt_hint">Enter your Doubt</string>
     <string name="username_hint">Username</string>
     <string name="pass_hint">Password</string>
     <string name="logout_confirm">Are you sure you want to disconnect?</string>
+    <string name="delete_confirm">Are you sure you want to delete this doubt?</string>
     <string name="ldap_title">Enter LDAP details</string>
 </resources>
