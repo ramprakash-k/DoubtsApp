@@ -17,7 +17,9 @@ import in.ac.iitb.doubtsapp.R;
  * Created by Ramprakash on 19-08-2015.
  * Fragment that displays all the doubts
  */
-public class DoubtsFragment extends Fragment {
+public class DoubtsFragment
+    extends Fragment
+    implements FiltersManager.FilterChangedListener {
 
     private DoubtsListAdapter doubtsListAdapter;
 
@@ -97,5 +99,10 @@ public class DoubtsFragment extends Fragment {
     public void deleteDoubt(int doubtId) {
         doubts.remove(doubtId);
         doubtsListAdapter.deleteDoubt(doubtId);
+    }
+
+    @Override
+    public void onFilterChanged(FiltersManager.FilterType newFilter) {
+        doubtsListAdapter.setFilterType(newFilter);
     }
 }

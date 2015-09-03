@@ -31,14 +31,17 @@ public class MainActivity
         CONNECT,
         DOUBT,
     }
-    private STATE currentState;
+
+    private DoubtInAsync doubtInAsync;
     private DoubtsFragment doubtsFragment;
     private ConnectPrompt connectPrompt;
-    private View logoutButton;
+
     private View filterButton;
+    private View logoutButton;
+
+    private STATE currentState;
     private boolean isConnected = false;
     private Socket server;
-    private DoubtInAsync doubtInAsync;
     private String name;
     private String rollNo;
 
@@ -71,14 +74,15 @@ public class MainActivity
                     }
                 }
             });
+        doubtsFragment = new DoubtsFragment();
+        final FiltersManager manager = new FiltersManager(doubtsFragment);
         filterButton.setOnClickListener(
             new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(MainActivity.this, "Not yet built!", Toast.LENGTH_SHORT).show();
+                    manager.onFilterButtonClick(v);
                 }
             });
-        doubtsFragment = new DoubtsFragment();
         getFragmentManager()
             .beginTransaction()
             .add(R.id.main_fragment, doubtsFragment)
@@ -163,9 +167,6 @@ public class MainActivity
                 LDAPLoginPrompt loginPrompt = new LDAPLoginPrompt();
                 loginPrompt.setCancelable(false);
                 loginPrompt.show(getFragmentManager(), null);
-                switchState(STATE.DOUBT);
-                doubtInAsync = new DoubtInAsync();
-                doubtInAsync.execute();
             }
         }
     }
@@ -173,10 +174,10 @@ public class MainActivity
     @Override
     public void onPostLoginSuccess(String userId, String cn) {
         rollNo = userId;
-        new DoubtOutAsync().executeOnExecutor(
-            AsyncTask.THREAD_POOL_EXECUTOR,
-            rollNo,
-            "Roll");
+        switchState(STATE.DOUBT);
+        doubtInAsync = new DoubtInAsync();
+        doubtInAsync.execute();
+        new DoubtOutAsync().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, rollNo, "Roll");
         Toast.makeText(this, "Login Success", Toast.LENGTH_SHORT).show();
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         @SuppressLint("InflateParams")
