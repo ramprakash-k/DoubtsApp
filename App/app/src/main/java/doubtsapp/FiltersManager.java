@@ -64,7 +64,8 @@ public class FiltersManager {
                         }
                     }
                     if (newType == null) return false;
-                    if (newType == currentFilterType) return true;
+                    if (newType == currentFilterType &&
+                        newType != FilterType.RANDOM_ORDER) return true;
                     currentFilterType = newType;
                     listener.onFilterChanged(newType);
                     return true;
