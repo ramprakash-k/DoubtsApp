@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import in.ac.iitb.doubtsapp.R;
 
@@ -87,17 +88,30 @@ public class DoubtsListAdapter extends BaseAdapter {
             case LEAST_UPVOTES_FIRST:
                 currentComparator = new LeastUpvotesComparator();
                 break;
+            case RANDOM_ORDER:
+                currentComparator = null;
+                break;
         }
-        Collections.sort(doubts, currentComparator);
+        if (currentComparator == null) {
+            Collections.shuffle(doubts, new Random(System.nanoTime()));
+        } else {
+            Collections.sort(doubts, currentComparator);
+        }
         resetPositionMap(0);
         notifyDataSetChanged();
     }
 
     public void addDoubt(Doubt doubt) {
-        int position = Collections.binarySearch(doubts, doubt, currentComparator);
-        if (position > 0) return;
-        doubts.add(-position - 1, doubt);
-        resetPositionMap(-position - 1);
+        int position;
+        if (currentComparator != null) {
+            position = Collections.binarySearch(doubts, doubt, currentComparator);
+            if (position > 0) return;
+            position = 0 - position - 1;
+        } else {
+            position = new Random(System.nanoTime()).nextInt(getCount() + 1);
+        }
+        doubts.add(position, doubt);
+        resetPositionMap(position);
         notifyDataSetChanged();
     }
 
@@ -112,8 +126,10 @@ public class DoubtsListAdapter extends BaseAdapter {
         Doubt doubt = doubts.get(idToPositionMap.get(doubtId));
         doubt.upVotesCount = newCnt;
         if (userChange) doubt.hasUserUpVoted = isUpvote;
-        Collections.sort(doubts, currentComparator);
-        resetPositionMap(0);
+        if (currentComparator != null) {
+            Collections.sort(doubts, currentComparator);
+            resetPositionMap(0);
+        }
         notifyDataSetChanged();
     }
 

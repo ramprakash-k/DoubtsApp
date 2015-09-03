@@ -21,7 +21,8 @@ public class FiltersManager {
         TIME_EARLIEST_FIRST ("Earliest First"),
         TIME_LATEST_FIRST ("Latest First"),
         MOST_UPVOTES_FIRST ("Most Upvotes First"),
-        LEAST_UPVOTES_FIRST ("Least Upvotes First");
+        LEAST_UPVOTES_FIRST ("Least Upvotes First"),
+        RANDOM_ORDER("Random Order");
 
         private final String name;
 
@@ -48,10 +49,9 @@ public class FiltersManager {
 
     public void onFilterButtonClick(View v) {
         PopupMenu menu = new PopupMenu(v.getContext(), v);
-        addMenuItem(menu, FilterType.TIME_EARLIEST_FIRST, v.getResources());
-        addMenuItem(menu, FilterType.TIME_LATEST_FIRST, v.getResources());
-        addMenuItem(menu, FilterType.MOST_UPVOTES_FIRST, v.getResources());
-        addMenuItem(menu, FilterType.LEAST_UPVOTES_FIRST, v.getResources());
+        for (FilterType type : FilterType.values()) {
+            addMenuItem(menu, type, v.getResources());
+        }
         menu.setOnMenuItemClickListener(
             new PopupMenu.OnMenuItemClickListener() {
                 @Override
