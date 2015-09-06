@@ -7,7 +7,7 @@ Prerequisites :
 How to run :
 - Download/clone repo (or just the Server/bin/ files and App/app/build/outputs/apk/app-debug.apk)
 - cd Server/bin
-- java doubtServer.Server <port>
+- java doubtServer.Server 8000 (port number)
 - Download app-debug.apk (rename maybe) on android phone
 - Install and run
 - Connect needs IP, port of server
