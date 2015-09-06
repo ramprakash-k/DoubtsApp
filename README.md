@@ -1,8 +1,8 @@
 # DoubtsApp
 
 Prerequisites :
-Java : version 1.7 or greater
-Android mobile version : ICS or greater
+- Java : version 1.7 or greater
+- Android mobile version : ICS or greater
 
 How to run :
 - Download/clone repo (or just the Server/bin/ files and App/app/build/outputs/apk/app-debug.apk)
