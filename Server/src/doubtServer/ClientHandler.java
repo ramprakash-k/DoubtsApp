@@ -1,9 +1,16 @@
 package doubtServer;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Observable;
+import java.util.Observer;
 
 public class ClientHandler implements Observer, Runnable {
 	
@@ -12,9 +19,11 @@ public class ClientHandler implements Observer, Runnable {
     DataOutputStream out;
     Broadcaster broadcaster;
     DoubtHandler doubtHandler;
+    boolean isAlive;
 	
 	public ClientHandler(Socket clientSocket, Broadcaster broadcaster, DoubtHandler handler) throws IOException {
 		client = clientSocket;
+		isAlive = true;
 		in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 		out = new DataOutputStream(clientSocket.getOutputStream());
 		this.broadcaster = broadcaster;
@@ -43,9 +52,28 @@ public class ClientHandler implements Observer, Runnable {
 			if (input != null) {
 				String[] info = input.split("[|]");
 				if (!info[0].equals("I Am")) {
-					out.writeBytes("Wrong app. Disconnecting.");
-					System.out.println("Wrong app. Disconnecting.");
-					disconnect();
+					if (input.startsWith("GET ")) {
+						File file = new File("./../DoubtsApp.apk");
+						int numBytes = (int) file.length();
+						FileInputStream inFile = new FileInputStream(file);
+						byte[] fileInBytes = new byte[numBytes];
+						inFile.read(fileInBytes);
+						out.writeBytes("HTTP/1.0 200 Document Follows\r\n");
+						System.out.println("HTTP/1.0 200 Document Follows");
+						out.writeBytes("Content-Disposition: attachment; filename=DoubtsApp.apk\r\n");
+						System.out.println("Content-Disposition: attachment; filename=DoubtsApp.apk");
+						out.writeBytes("Content-Type: application/octet-stream\r\n");
+						System.out.println("Content-Type: application/octet-stream");
+						out.writeBytes("Content-Length: " + numBytes + "\r\n\r\n");
+						System.out.println("Content-Length: " + numBytes + "\n");
+						out.write(fileInBytes, 0, numBytes);
+						inFile.close();
+						disconnect();
+					} else {
+						out.writeBytes("Wrong app. Disconnecting.");
+						System.out.println("Wrong app. Disconnecting.");
+						disconnect();
+					}
 				} else {
 					roll = info[1];
 					for(String instr : doubtHandler.genAll(roll)) {
@@ -62,7 +90,7 @@ public class ClientHandler implements Observer, Runnable {
 			e.printStackTrace();
 			disconnect();
 		}
-		while (!client.isClosed()) {
+		while (!client.isClosed() && isAlive) {
 			try {
 				String input = in.readLine();
 				if (input!=null) {
@@ -134,6 +162,7 @@ public class ClientHandler implements Observer, Runnable {
 	}
 	
 	private void disconnect() {
+		isAlive = false;
 		try {
 			client.close();
 		} catch (Exception e1) {
