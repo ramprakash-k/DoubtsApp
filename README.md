@@ -6,9 +6,11 @@ Prerequisites :
 
 How to run :
 - Download/clone repo (or just the Server/bin/ files and App/app/build/outputs/apk/app-debug.apk)
+- Copy apk file into project root directory as follows :
+- cp App/app/build/outputs/apk/app-debug.apk DoubtsApp.apk
 - cd Server/bin
 - java doubtServer.Server 8000 (port number)
-- Download app-debug.apk (rename maybe) on android phone
+- Download DoubtsApp.apk on android phone by connecting via browser (same ip and port)
 - Install and run
 - Connect needs IP, port of server
 - Login with LDAP required
