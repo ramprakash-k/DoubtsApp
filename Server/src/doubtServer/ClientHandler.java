@@ -53,7 +53,7 @@ public class ClientHandler implements Observer, Runnable {
 				String[] info = input.split("[|]");
 				if (!info[0].equals("I Am")) {
 					if (input.startsWith("GET ")) {
-						File file = new File("./../DoubtsApp.apk");
+						File file = new File("./../../DoubtsApp.apk");
 						int numBytes = (int) file.length();
 						FileInputStream inFile = new FileInputStream(file);
 						byte[] fileInBytes = new byte[numBytes];
