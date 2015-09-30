@@ -214,7 +214,6 @@ public class MainActivity
     @Override
     public void onPostLoginFailed() {
         Toast.makeText(this, "Incorrect login", Toast.LENGTH_SHORT).show();
-
     }
 
     private class DoubtInAsync extends AsyncTask<Void,String,Void> {

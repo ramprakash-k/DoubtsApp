@@ -135,8 +135,8 @@ public class ClientHandler implements Observer, Runnable {
 					if (inf[0].equals("App")) {
 						doubtHandler.appendDoubt(
 								doubtId,
-								Integer.parseInt(info[1]),
-								info[2]);
+								Integer.parseInt(inf[1]),
+								inf[2]);
 						s = s + "|" + Integer.toString(doubtId);
 						broadcaster.broadcastMessage(s);
 					}

@@ -15,7 +15,6 @@ public class Doubt {
     public String name;
     public String time;
     public int upVotesCount;
-    public boolean hasUserUpVoted;
     private Set<String> upVoters;
     private Map<Integer, String> doubt;
 
@@ -25,7 +24,6 @@ public class Doubt {
         rollNo = null;
         name = null;
         upVotesCount = 0;
-        hasUserUpVoted = false;
         doubt = new HashMap<>();
         upVoters = new HashSet<>();
     }
