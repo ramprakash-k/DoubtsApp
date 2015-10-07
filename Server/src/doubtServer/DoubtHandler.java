@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.swing.BorderFactory;
-import javax.swing.JFormattedTextField;
+import javax.swing.JTextArea;
 
 public class DoubtHandler {
 	Map<Integer, Doubt> doubts;
@@ -65,7 +65,7 @@ public class DoubtHandler {
 	
 	public int upVoteDoubt(int doubtId, String roll) {
 		int nc = doubts.get(doubtId).upVote(roll);
-		JFormattedTextField comp = (JFormattedTextField) Server.pane.getComponent(5*doubtId + 4);
+		JTextArea comp = (JTextArea) Server.pane.getComponent(5*doubtId + 4);
 		comp.setText(Integer.toString(nc));
 		Server.pane.updateUI();
 		return nc;
@@ -73,7 +73,7 @@ public class DoubtHandler {
 	
 	public int nupVoteDoubt(int doubtId, String roll) {
 		int nc = doubts.get(doubtId).nupVote(roll);
-		JFormattedTextField comp = (JFormattedTextField) Server.pane.getComponent(5*doubtId + 4);
+		JTextArea comp = (JTextArea) Server.pane.getComponent(5*doubtId + 4);
 		comp.setText(Integer.toString(nc));
 		Server.pane.updateUI();
 		return nc;
@@ -97,7 +97,7 @@ public class DoubtHandler {
 	public void deleteDoubt(int doubtId) {
 		doubts.remove(doubtId);
 		for (int i = 0; i < 5; i++) {
-			JFormattedTextField comp = (JFormattedTextField) Server.pane.getComponent(5*doubtId + i);
+			JTextArea comp = (JTextArea) Server.pane.getComponent(5*doubtId + i);
 			Map attr = comp.getFont().getAttributes();
 			attr.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
 			comp.setFont(new Font(attr));
@@ -111,31 +111,33 @@ public class DoubtHandler {
 		gbc.weighty = 1;
 		gbc.anchor = GridBagConstraints.NORTHWEST;
 		
-		JFormattedTextField label1 = new JFormattedTextField(doubt.name);
+		JTextArea label1 = new JTextArea(doubt.name);
 		label1.setEditable(false);
 		label1.setBorder(BorderFactory.createRaisedSoftBevelBorder());
 		gbc.weightx = 1;gbc.gridx = 0;gbc.gridy = doubt.DoubtId;
 		Server.pane.add(label1, gbc);
 		
-		JFormattedTextField label2 = new JFormattedTextField(doubt.rollNo);
+		JTextArea label2 = new JTextArea(doubt.rollNo);
 		label2.setEditable(false);
 		label2.setBorder(BorderFactory.createRaisedSoftBevelBorder());
 		gbc.weightx = 1;gbc.gridx = 1;gbc.gridy = doubt.DoubtId;
 		Server.pane.add(label2, gbc);
 		
-		JFormattedTextField label3 = new JFormattedTextField(doubt.time);
+		JTextArea label3 = new JTextArea(doubt.time);
 		label3.setEditable(false);
 		label3.setBorder(BorderFactory.createRaisedSoftBevelBorder());
 		gbc.weightx = 1;gbc.gridx = 2;gbc.gridy = doubt.DoubtId;
 		Server.pane.add(label3, gbc);
 		
-		JFormattedTextField label4 = new JFormattedTextField(doubt.getDoubt());
+		String dbt = doubt.getDoubt();
+		dbt.replaceAll("\\n", "<br>");
+		JTextArea label4 = new JTextArea(dbt);
 		label4.setEditable(false);
 		label4.setBorder(BorderFactory.createRaisedSoftBevelBorder());
 		gbc.weightx = 5;gbc.gridx = 3;gbc.gridy = doubt.DoubtId;
 		Server.pane.add(label4, gbc);
 		
-		JFormattedTextField label5 = new JFormattedTextField(Integer.toString(doubt.upVotesCount));
+		JTextArea label5 = new JTextArea(Integer.toString(doubt.upVotesCount));
 		label5.setEditable(false);
 		label5.setBorder(BorderFactory.createRaisedSoftBevelBorder());
 		gbc.weightx = 1;gbc.gridx = 4;gbc.gridy = doubt.DoubtId;

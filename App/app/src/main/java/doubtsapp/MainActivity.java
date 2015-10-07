@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -24,7 +25,8 @@ import in.ac.iitb.doubtsapp.R;
 public class MainActivity
     extends Activity
     implements AddDoubtsPrompt.PostDoubtListener,
-        LDAPLoginPrompt.PostLoginListener,
+        CSVLoginPrompt.LoginCheckListener,
+        CSVLoginPrompt.PostLoginListener,
         DoubtItemViewBinder.DoubtHandler {
 
     private enum STATE {
@@ -35,6 +37,7 @@ public class MainActivity
     private DoubtInAsync doubtInAsync;
     private DoubtsFragment doubtsFragment;
     private ConnectPrompt connectPrompt;
+    private CSVLoginPrompt loginPrompt;
 
     private View filterButton;
     private View logoutButton;
@@ -142,8 +145,6 @@ public class MainActivity
 
         @Override
         protected Socket doInBackground(String... params) {
-            try { Thread.sleep(1000);
-            }catch (Exception ignored) {}
             Socket server;
             String ipString = params[0];
             int port = Integer.parseInt(params[1]);
@@ -164,7 +165,7 @@ public class MainActivity
             } else {
                 Toast.makeText(MainActivity.this, "Connected!", Toast.LENGTH_SHORT).show();
                 server = socket;
-                LDAPLoginPrompt loginPrompt = new LDAPLoginPrompt();
+                loginPrompt = new CSVLoginPrompt();
                 loginPrompt.setCancelable(false);
                 loginPrompt.show(getFragmentManager(), null);
             }
@@ -172,12 +173,17 @@ public class MainActivity
     }
 
     @Override
-    public void onPostLoginSuccess(String userId, String cn) {
-        rollNo = userId;
+    public void checkLoginDetails(String userId, String pass) {
         switchState(STATE.DOUBT);
         doubtInAsync = new DoubtInAsync();
         doubtInAsync.execute();
-        new DoubtOutAsync().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, rollNo, "Roll");
+        new DoubtOutAsync()
+            .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, userId, "Login", pass);
+    }
+
+    @Override
+    public void onPostLoginSuccess(String userId, String cn) {
+        rollNo = userId;
         Toast.makeText(this, "Login Success", Toast.LENGTH_SHORT).show();
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         @SuppressLint("InflateParams")
@@ -190,14 +196,30 @@ public class MainActivity
         builder
             .setTitle(getString(R.string.name_title))
             .setView(text)
-            .setPositiveButton("Confirm",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        MainActivity.this.name = text.getText().toString();
-                    }
-                });
-        AlertDialog dialog = builder.create();
+            .setPositiveButton("Confirm",null);
+        final AlertDialog dialog = builder.create();
+        dialog.setOnShowListener(
+            new DialogInterface.OnShowListener() {
+                @Override
+                public void onShow(DialogInterface d) {
+                    Button button = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                    button.setOnClickListener(
+                        new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                if (!text.getText().toString().isEmpty()) {
+                                    MainActivity.this.name = text.getText().toString();
+                                    dialog.dismiss();
+                                } else {
+                                    Toast.makeText(
+                                        MainActivity.this,
+                                        "Name can't be empty",
+                                        Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        });
+                }
+            });
         dialog.setCancelable(false);
         dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         dialog.show();
@@ -242,6 +264,14 @@ public class MainActivity
             String s = doubts[0];
             String info[] = s.split("[|]");
             switch (info[0]) {
+                // Invalid
+                case "Invalid":
+                    onPostLoginFailed();
+                    break;
+                // Valid | roll
+                case "Valid":
+                    loginPrompt.loginSuccess(info[1]);
+                    break;
                 // Add | lines | name | roll | doubtLine1 | time | doubtId
                 case "Add":
                     Doubt doubt = new Doubt();
@@ -379,8 +409,8 @@ public class MainActivity
                     if (params[1] == null) switchState(STATE.CONNECT);
                 } else {
                     switch (params[1]) {
-                        case "Roll":
-                            out.writeBytes("I Am|" + msg + "\n");
+                        case "Login":
+                            out.writeBytes("Check|"+ msg + "|" + params[2] + "\n");
                             break;
                         case "Add":
                             String doubt[] = params[0].split("[\n]");

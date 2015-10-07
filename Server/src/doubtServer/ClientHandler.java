@@ -19,15 +19,18 @@ public class ClientHandler implements Observer, Runnable {
     DataOutputStream out;
     Broadcaster broadcaster;
     DoubtHandler doubtHandler;
+    LoginHandler loginHandler;
     boolean isAlive;
 	
-	public ClientHandler(Socket clientSocket, Broadcaster broadcaster, DoubtHandler handler) throws IOException {
+	public ClientHandler(Socket clientSocket, Broadcaster broadcaster, DoubtHandler handler, LoginHandler checker)
+			throws IOException {
 		client = clientSocket;
 		isAlive = true;
 		in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 		out = new DataOutputStream(clientSocket.getOutputStream());
 		this.broadcaster = broadcaster;
 		doubtHandler = handler;
+		loginHandler = checker;
 		broadcaster.addObserver(this);
 	}
 	
@@ -51,7 +54,7 @@ public class ClientHandler implements Observer, Runnable {
 			System.out.println("message received : " + input);
 			if (input != null) {
 				String[] info = input.split("[|]");
-				if (!info[0].equals("I Am")) {
+				if (!info[0].equals("Check")) {
 					if (input.startsWith("GET ")) {
 						File file = new File("./../../DoubtsApp.apk");
 						int numBytes = (int) file.length();
@@ -76,6 +79,20 @@ public class ClientHandler implements Observer, Runnable {
 					}
 				} else {
 					roll = info[1];
+					String pass = info[2];
+					while (!loginHandler.checkValid(roll, pass)) {
+						System.out.println("Invalid");
+						out.writeBytes("Invalid\n");
+						input = in.readLine();
+						String inf[] = input.split("[|]");
+						roll = inf[1];
+						pass = inf[2];
+					}
+					System.out.println("Valid|" + roll);
+					out.writeBytes("Valid|" + roll + "\n");
+					try {
+						Thread.sleep(500);
+					} catch (InterruptedException e) {}
 					for(String instr : doubtHandler.genAll(roll)) {
 						System.out.println("Sending instr : " + instr);
 						out.writeBytes(instr + "\n");

@@ -17,4 +17,5 @@
     <string name="logout_confirm">Are you sure you want to disconnect?</string>
     <string name="delete_confirm">Are you sure you want to delete this doubt?</string>
     <string name="ldap_title">Enter LDAP details</string>
+    <string name="login_title">Enter Login details</string>
 </resources>

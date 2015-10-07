@@ -14,30 +14,31 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 
-import com.unboundid.ldap.sdk.Filter;
-import com.unboundid.ldap.sdk.LDAPConnection;
-import com.unboundid.ldap.sdk.SearchRequest;
-import com.unboundid.ldap.sdk.SearchResult;
-import com.unboundid.ldap.sdk.SearchScope;
-
 import in.ac.iitb.doubtsapp.R;
 
 /**
- * Prompt to login with LDAP login
+ * Prompt to login with
  */
-public class LDAPLoginPrompt extends DialogFragment {
+public class CSVLoginPrompt extends DialogFragment {
     interface PostLoginListener {
         void onPostLoginSuccess(String userId, String cn);
         void onLoginCancelled();
         void onPostLoginFailed();
     }
 
+    interface LoginCheckListener {
+        void checkLoginDetails(String userId, String pass);
+    }
+
+    private LoginCheckListener checker;
     private PostLoginListener listener;
+    private AlertDialog dialog;
 
     @Override
     public AlertDialog onCreateDialog(Bundle savedInstanceState) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         listener = (PostLoginListener) getActivity();
+        checker = (LoginCheckListener) getActivity();
         LayoutInflater inflater = getActivity().getLayoutInflater();
         @SuppressLint("InflateParams")
         View view = inflater.inflate(R.layout.login_prompt, null);
@@ -54,9 +55,9 @@ public class LDAPLoginPrompt extends DialogFragment {
         final SharedPreferences preferences =
             getActivity().getSharedPreferences("LoginPref", Context.MODE_PRIVATE);
         userText.setText(preferences.getString("login_user",null));
-        passText.setText(preferences.getString("login_pass",null));
+        passText.setText(preferences.getString("login_pass", null));
         builder
-            .setTitle(R.string.ldap_title)
+            .setTitle(R.string.login_title)
             .setView(view)
             .setPositiveButton("Login",null)
             .setNeutralButton("Clear", null)
@@ -67,7 +68,7 @@ public class LDAPLoginPrompt extends DialogFragment {
                         listener.onLoginCancelled();
                     }
                 });
-        final AlertDialog dialog = builder.create();
+        dialog = builder.create();
         dialog.setOnShowListener(
             new DialogInterface.OnShowListener() {
                 @Override
@@ -79,20 +80,22 @@ public class LDAPLoginPrompt extends DialogFragment {
                             public void onClick(View v) {
                                 userText.setText(null);
                                 passText.setText(null);
-                                new AlertDialog.Builder(getActivity())
-                                    .setMessage(getString(R.string.forget_pass))
-                                    .setPositiveButton("Confirm",
-                                        new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                SharedPreferences.Editor editor = preferences.edit();
-                                                editor.remove("login_user");
-                                                editor.remove("login_pass");
-                                                editor.apply();
-                                            }
-                                        })
-                                    .setNegativeButton("Cancel", null)
-                                    .show();
+                                if (preferences.contains("login_user")) {
+                                    new AlertDialog.Builder(getActivity())
+                                        .setMessage(getString(R.string.forget_pass))
+                                        .setPositiveButton("Confirm",
+                                            new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog, int which) {
+                                                    SharedPreferences.Editor editor = preferences.edit();
+                                                    editor.remove("login_user");
+                                                    editor.remove("login_pass");
+                                                    editor.apply();
+                                                }
+                                            })
+                                        .setNegativeButton("Cancel", null)
+                                        .show();
+                                }
                             }
                         });
                     Button loginButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
@@ -104,39 +107,23 @@ public class LDAPLoginPrompt extends DialogFragment {
                                 String pass = passText.getText().toString();
                                 if (user.isEmpty() || pass.isEmpty())
                                     listener.onPostLoginFailed();
-                                try {
-                                    LDAPConnection connection =
-                                        new LDAPConnection("10.200.1.31", 389);
-                                    Filter filter = Filter.createEqualityFilter("uid",user);
-                                    SearchRequest request =
-                                        new SearchRequest(
-                                            "dc=iitb,dc=ac,dc=in",
-                                            SearchScope.SUB,
-                                            filter,
-                                            "employeeNumber",
-                                            "cn");
-                                    SearchResult result = connection.search(request);
-                                    String dn = result.getSearchEntries().get(0).getDN();
-                                    connection.bind(dn, pass);
-                                    if (saveCheckBox.isChecked()) {
-                                        SharedPreferences.Editor editor = preferences.edit();
-                                        editor.putString("login_user",user);
-                                        editor.putString("login_pass",pass);
-                                        editor.apply();
-                                    }
-                                    listener.onPostLoginSuccess(
-                                        result.getSearchEntries().get(0)
-                                            .getAttributeValue("employeeNumber"),
-                                        result.getSearchEntries().get(0).getAttributeValue("cn"));
-                                    dialog.dismiss();
-                                } catch (Exception e) {
-                                    listener.onPostLoginFailed();
+                                if (saveCheckBox.isChecked()) {
+                                    SharedPreferences.Editor editor = preferences.edit();
+                                    editor.putString("login_user", user);
+                                    editor.putString("login_pass", pass);
+                                    editor.apply();
                                 }
+                                checker.checkLoginDetails(user,pass);
                             }
                         });
                 }
             });
         dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         return dialog;
+    }
+
+    public void loginSuccess(String roll) {
+        listener.onPostLoginSuccess(roll, null);
+        dialog.dismiss();
     }
 }

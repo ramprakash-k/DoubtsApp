@@ -89,12 +89,13 @@ public class Server {
 		frame.setVisible(true);
 		final Broadcaster broadcaster = new Broadcaster();
 		final DoubtHandler doubtHandler = new DoubtHandler();
+		final LoginHandler loginHandler = new LoginHandler();
 		System.out.println("Server started at port number "+Integer.toString(portNumber));
 		while (frame.isVisible()) {
 			try {
 				Socket clientSocket = serverSocket.accept();
 				System.out.println(clientSocket.getInetAddress().getHostAddress() + " connected.");
-				new Thread(new ClientHandler(clientSocket,broadcaster,doubtHandler)).start();
+				new Thread(new ClientHandler(clientSocket,broadcaster,doubtHandler,loginHandler)).start();
 			} catch(IOException e) {
 				try {
 					serverSocket.close();
