@@ -26,7 +26,10 @@ public class DoubtItemViewBinder {
 
     public static void bind(View view, final Doubt doubt, final DoubtHandler handler) {
         ((TextView) view.findViewById(R.id.name_text))
-            .setText(doubt.name);
+            .setText(doubt.name +
+                (doubt.childCount > 0
+                    ? " + "+Integer.toString(doubt.childCount)
+                    : ""));
         final TextView timeText = ((TextView) view.findViewById(R.id.time_text));
         timeText.setText(doubt.time);
         ((TextView) view.findViewById(R.id.doubt_text))
