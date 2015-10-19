@@ -81,14 +81,14 @@ public class Server {
 				}
 			}
 		});
-		frame.setMinimumSize(new Dimension(500, 200));
-		frame.setMaximumSize(new Dimension(500, 500));
+		frame.setMinimumSize(new Dimension(1000, 700));
+		frame.setMaximumSize(new Dimension(1000, 700));
 		frame.setResizable(false);
 		initPane(frame.getContentPane());
 		frame.pack();
 		frame.setVisible(true);
 		final Broadcaster broadcaster = new Broadcaster();
-		final DoubtHandler doubtHandler = new DoubtHandler();
+		final DoubtHandler doubtHandler = new DoubtHandler(broadcaster);
 		final LoginHandler loginHandler = new LoginHandler();
 		System.out.println("Server started at port number "+Integer.toString(portNumber));
 		while (frame.isVisible()) {
