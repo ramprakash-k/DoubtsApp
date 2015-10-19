@@ -260,6 +260,13 @@ public class MainActivity
                     doubtsFragment.addDoubt(doubt);
                     break;
                 }
+                // App | n | doubtLine(n) | doubtId
+                case "App":
+                    doubtsFragment.appendDoubt(
+                        Integer.parseInt(info[3]),
+                        Integer.parseInt(info[1]),
+                        info[2]);
+                    break;
                 // Edit | lines | line1 | doubtId
                 case "Edit": {
                     Doubt doubt = new Doubt();
@@ -273,13 +280,6 @@ public class MainActivity
                 // Epp | n | doubtLine(n) | doubtId
                 case "Epp":
                     doubtsFragment.eppendDoubt(
-                        Integer.parseInt(info[3]),
-                        Integer.parseInt(info[1]),
-                        info[2]);
-                    break;
-                // App | n | doubtLine(n) | doubtId
-                case "App":
-                    doubtsFragment.appendDoubt(
                         Integer.parseInt(info[3]),
                         Integer.parseInt(info[1]),
                         info[2]);
@@ -306,6 +306,10 @@ public class MainActivity
                         Toast.makeText(MainActivity.this, "Deleted", Toast.LENGTH_SHORT).show();
                     }
                     doubtsFragment.deleteDoubt(Integer.parseInt(info[1]));
+                    break;
+                // Merge | child | parent
+                case "Merge":
+                    doubtsFragment.mergeDoubt(Integer.parseInt(info[1]),Integer.parseInt(info[2]));
                     break;
             }
         }

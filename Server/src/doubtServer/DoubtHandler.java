@@ -1,5 +1,6 @@
 package doubtServer;
 
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.ScrollPane;
@@ -26,11 +27,13 @@ public class DoubtHandler{
 	Map<Integer, Doubt> doubts;
 	int totalCount;
 	Broadcaster broadcaster;
+	int selected;
 	
 	DoubtHandler(Broadcaster caster) {
 		doubts = new HashMap<Integer, Doubt>();
 		totalCount = 0;
 		broadcaster = caster;
+		selected = -1;
 	}
 	
 	public int getNewId() {
@@ -125,17 +128,30 @@ public class DoubtHandler{
 		};
 	}
 	
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	private void rightClickAction(MouseEvent e, final int doubtId) {
 		if (e.isPopupTrigger()){
 			ActionListener listener = new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent a) {
 					String s = a.getActionCommand();
-					if (s.equals("Delete")) {
+					switch(s) {
+					case "Delete": {
 						System.out.println("Delete pressed " + Integer.toString(doubtId));
+						if (selected == doubtId) {
+							selected = -1;
+							for (int i = 0; i < 5; i++) {
+								JTextArea comp = (JTextArea) Server.pane.getComponent(5*doubtId + i);
+								Map attr = comp.getFont().getAttributes();
+								attr.put(TextAttribute.BACKGROUND, Color.WHITE);
+								comp.setFont(new Font(attr));
+							}
+							Server.pane.updateUI();
+						}
 						deleteDoubt(doubtId);
 						broadcaster.broadcastMessage("Del|"+Integer.toString(doubtId)+"|-1");
-					} else if (s.equals("Edit")) {
+						break;
+					} case "Edit": {
 						System.out.println("Edit pressed " + Integer.toString(doubtId));
 						JPanel panel = new JPanel();
 						panel.setSize(400, 300);
@@ -168,15 +184,67 @@ public class DoubtHandler{
 						} else {
 							System.out.println("Editing cancelled");
 						}
+						break;
+					} case "Merge With": {
+						selected = doubtId;
+						for (int i = 0; i < 5; i++) {
+							JTextArea comp = (JTextArea) Server.pane.getComponent(5*doubtId + i);
+							Map attr = comp.getFont().getAttributes();
+							attr.put(TextAttribute.BACKGROUND, Color.YELLOW);
+							comp.setFont(new Font(attr));
+						}
+						Server.pane.updateUI();
+						break;
+					} case "Cancel Merge": {
+						selected = -1;
+						for (int i = 0; i < 5; i++) {
+							JTextArea comp = (JTextArea) Server.pane.getComponent(5*doubtId + i);
+							Map attr = comp.getFont().getAttributes();
+							attr.put(TextAttribute.BACKGROUND, Color.WHITE);
+							comp.setFont(new Font(attr));
+						}
+						Server.pane.updateUI();
+						break;
+					} case "Merge Into": {
+						Doubt child = doubts.get(selected);
+						Doubt parent = doubts.get(doubtId);
+						child.parentId = doubtId;
+						parent.childCount = parent.childCount + 1 + child.childCount;
+						for (int i = 0; i < 5; i++) {
+							JTextArea comp = (JTextArea) Server.pane.getComponent(5*selected + i);
+							Map attr = comp.getFont().getAttributes();
+							attr.put(TextAttribute.BACKGROUND, Color.LIGHT_GRAY);
+							comp.setFont(new Font(attr));
+							for (MouseListener it : comp.getMouseListeners()) {
+								comp.removeMouseListener(it);
+							}
+						}
+						Server.pane.updateUI();
+						broadcaster.broadcastMessage("Merge|"
+								+ Integer.toString(selected) + "|"
+								+ Integer.toString(doubtId));
+						selected = -1;
+						break;
+					}
 					}
 				}
 			};
 			JPopupMenu menu = new JPopupMenu();
-			JMenuItem merge = new JMenuItem("Delete");
+			JMenuItem merge;
+			if (selected == -1) {
+				merge = new JMenuItem("Merge With");
+			} else if (selected != doubtId) {
+				merge = new JMenuItem("Merge Into");
+			} else {
+				merge = new JMenuItem("Cancel Merge");
+			}
 			merge.addActionListener(listener);
+			menu.add(merge);
+			JMenuItem del = new JMenuItem("Delete");
+			del.addActionListener(listener);
 			JMenuItem edit = new JMenuItem("Edit");
 			edit.addActionListener(listener);
-			menu.add(merge);
+			menu.add(del);
 			menu.add(edit);
 			menu.show(e.getComponent(), e.getX(), e.getY());
 		}

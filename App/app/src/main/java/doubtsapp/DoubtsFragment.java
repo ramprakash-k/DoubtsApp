@@ -96,6 +96,10 @@ public class DoubtsFragment
         doubtsListAdapter.deleteDoubt(doubtId);
     }
 
+    public void mergeDoubt(int childId, int parentId) {
+        doubtsListAdapter.mergeDoubt(childId, parentId);
+    }
+
     @Override
     public void onFilterChanged(FiltersManager.FilterType newFilter) {
         doubtsListAdapter.setFilterType(newFilter);

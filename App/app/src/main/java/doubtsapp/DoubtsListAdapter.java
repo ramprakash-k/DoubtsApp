@@ -63,12 +63,14 @@ public class DoubtsListAdapter extends BaseAdapter {
     }
 
     private List<Doubt> doubts;
+    private List<Doubt> merged;
     private Map<Integer, Integer> idToPositionMap;
     private DoubtItemViewBinder.DoubtHandler doubtHandler;
     private Comparator<Doubt> currentComparator;
 
     public DoubtsListAdapter(DoubtItemViewBinder.DoubtHandler doubtHandler) {
         doubts = new ArrayList<>();
+        merged = new ArrayList<>();
         idToPositionMap = new HashMap<>();
         currentComparator = new EarliestComparator();
         this.doubtHandler = doubtHandler;
@@ -129,6 +131,17 @@ public class DoubtsListAdapter extends BaseAdapter {
     public void deleteDoubt(int doubtId) {
         int position = idToPositionMap.remove(doubtId);
         doubts.remove(position);
+        resetPositionMap(position);
+        notifyDataSetChanged();
+    }
+
+    public void mergeDoubt(int childId, int parentId) {
+        int position = idToPositionMap.remove(childId);
+        int parentPosition = idToPositionMap.get(parentId);
+        Doubt parent = doubts.get(parentPosition);
+        Doubt doubt = doubts.remove(position);
+        merged.add(doubt);
+        parent.childCount = parent.childCount + 1 + doubt.childCount;
         resetPositionMap(position);
         notifyDataSetChanged();
     }

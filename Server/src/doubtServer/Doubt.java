@@ -9,6 +9,8 @@ import java.util.Set;
 
 public class Doubt {
 	public int DoubtId;
+	public int parentId;
+	public int childCount;
     public int lines;
     public int linesReceived;
     public String rollNo;
@@ -19,6 +21,8 @@ public class Doubt {
     private Map<Integer, String> doubt;
 
     Doubt() {
+    	parentId = -1;
+    	childCount = 0;
         lines = 1;
         linesReceived = 0;
         rollNo = null;
