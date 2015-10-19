@@ -45,42 +45,38 @@ public class DoubtsFragment
     }
 
     public void addDoubt(Doubt tDoubt) {
-        if (!doubts.containsKey(tDoubt.DoubtId)) {
-            if (tDoubt.linesReceived == tDoubt.lines) {
-                doubtsListAdapter.addDoubt(tDoubt);
-            } else {
-                doubts.put(tDoubt.DoubtId, tDoubt);
-            }
-        }
-        else {
-            Doubt doubt = doubts.get(tDoubt.DoubtId);
-            doubt.lines = tDoubt.lines;
-            doubt.linesReceived++;
-            doubt.name = tDoubt.name;
-            doubt.rollNo = tDoubt.rollNo;
-            doubt.setDoubtLine(1, tDoubt.getFirstLine());
-            if (doubt.linesReceived == doubt.lines) {
-                doubtsListAdapter.addDoubt(doubt);
-                doubts.remove(tDoubt.DoubtId);
-            }
+        if (tDoubt.lines == 1) {
+            doubtsListAdapter.addDoubt(tDoubt);
+        } else {
+            doubts.put(tDoubt.DoubtId, tDoubt);
         }
     }
 
     public void appendDoubt(int doubtId ,int line, String dLine) {
-        if (doubts.containsKey(doubtId)) {
-            Doubt doubt = doubts.get(doubtId);
-            doubt.setDoubtLine(line, dLine);
-            doubt.linesReceived++;
-            if (doubt.linesReceived == doubt.lines) {
-                doubtsListAdapter.addDoubt(doubt);
-                doubts.remove(doubtId);
-            }
+        Doubt doubt = doubts.get(doubtId);
+        doubt.setDoubtLine(line, dLine);
+        doubt.linesReceived++;
+        if (doubt.linesReceived == doubt.lines) {
+            doubtsListAdapter.addDoubt(doubt);
+            doubts.remove(doubtId);
+        }
+    }
+
+    public void editDoubt(Doubt tDoubt) {
+        if (tDoubt.lines == 1) {
+            doubtsListAdapter.editDoubt(tDoubt);
         } else {
-            Doubt doubt = new Doubt();
-            doubt.DoubtId = doubtId;
-            doubt.linesReceived++;
-            doubt.setDoubtLine(line, dLine);
-            doubts.put(doubtId, doubt);
+            doubts.put(tDoubt.DoubtId, tDoubt);
+        }
+    }
+
+    public void eppendDoubt(int doubtId ,int line, String dLine) {
+        Doubt doubt = doubts.get(doubtId);
+        doubt.setDoubtLine(line, dLine);
+        doubt.linesReceived++;
+        if (doubt.linesReceived == doubt.lines) {
+            doubtsListAdapter.editDoubt(doubt);
+            doubts.remove(doubtId);
         }
     }
 
@@ -97,7 +93,6 @@ public class DoubtsFragment
     }
 
     public void deleteDoubt(int doubtId) {
-        doubts.remove(doubtId);
         doubtsListAdapter.deleteDoubt(doubtId);
     }
 

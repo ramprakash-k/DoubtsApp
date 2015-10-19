@@ -115,6 +115,17 @@ public class DoubtsListAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
+    public void editDoubt(Doubt tDoubt) {
+        Doubt doubt = doubts.get(idToPositionMap.get(tDoubt.DoubtId));
+        doubt.linesReceived = tDoubt.linesReceived;
+        doubt.lines = tDoubt.linesReceived;
+        String doubtString[] = tDoubt.getDoubt().split("[\n]");
+        for (int i = 1; i <= doubt.lines; i++) {
+            doubt.setDoubtLine(i,doubtString[i-1]);
+        }
+        notifyDataSetChanged();
+    }
+
     public void deleteDoubt(int doubtId) {
         int position = idToPositionMap.remove(doubtId);
         doubts.remove(position);

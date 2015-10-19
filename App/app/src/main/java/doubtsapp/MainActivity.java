@@ -243,7 +243,7 @@ public class MainActivity
             String info[] = s.split("[|]");
             switch (info[0]) {
                 // Add | lines | name | roll | doubtLine1 | time | doubtId
-                case "Add":
+                case "Add": {
                     Doubt doubt = new Doubt();
                     doubt.lines = Integer.parseInt(info[1]);
                     doubt.linesReceived++;
@@ -258,6 +258,24 @@ public class MainActivity
                     doubt.time = info[5];
                     doubt.DoubtId = Integer.parseInt(info[6]);
                     doubtsFragment.addDoubt(doubt);
+                    break;
+                }
+                // Edit | lines | line1 | doubtId
+                case "Edit": {
+                    Doubt doubt = new Doubt();
+                    doubt.lines = Integer.parseInt(info[1]);
+                    doubt.linesReceived++;
+                    doubt.setDoubtLine(1, info[2]);
+                    doubt.DoubtId = Integer.parseInt(info[3]);
+                    doubtsFragment.editDoubt(doubt);
+                    break;
+                }
+                // Epp | n | doubtLine(n) | doubtId
+                case "Epp":
+                    doubtsFragment.eppendDoubt(
+                        Integer.parseInt(info[3]),
+                        Integer.parseInt(info[1]),
+                        info[2]);
                     break;
                 // App | n | doubtLine(n) | doubtId
                 case "App":
