@@ -22,6 +22,8 @@ import in.ac.iitb.doubtsapp.R;
  */
 public class DoubtsListAdapter extends BaseAdapter {
 
+    private boolean SHOW_MERGED;
+
     private class EarliestComparator implements Comparator<Doubt> {
         @Override
         public int compare(Doubt lhs, Doubt rhs) {
@@ -74,6 +76,7 @@ public class DoubtsListAdapter extends BaseAdapter {
         idToPositionMap = new HashMap<>();
         currentComparator = new EarliestComparator();
         this.doubtHandler = doubtHandler;
+        SHOW_MERGED = false;
     }
 
     public void setFilterType(FiltersManager.FilterType filter) {
@@ -110,7 +113,7 @@ public class DoubtsListAdapter extends BaseAdapter {
             if (position > 0) return;
             position = 0 - position - 1;
         } else {
-            position = new Random(System.nanoTime()).nextInt(getCount() + 1);
+            position = new Random(System.nanoTime()).nextInt(doubts.size() + 1);
         }
         doubts.add(position, doubt);
         resetPositionMap(position);
@@ -142,6 +145,7 @@ public class DoubtsListAdapter extends BaseAdapter {
         Doubt doubt = doubts.remove(position);
         merged.add(doubt);
         parent.childCount = parent.childCount + 1 + doubt.childCount;
+        parent.isOwnDoubt = false;
         resetPositionMap(position);
         notifyDataSetChanged();
     }
@@ -163,18 +167,22 @@ public class DoubtsListAdapter extends BaseAdapter {
 
     public void clearAll() {
         doubts.clear();
+        merged.clear();
         idToPositionMap.clear();
         notifyDataSetChanged();
     }
 
     @Override
     public int getCount() {
-        return doubts.size();
+        return doubts.size() + (SHOW_MERGED ? merged.size() : 0);
     }
 
     @Override
     public Doubt getItem(int position) {
-        return doubts.get(position);
+        if (position < doubts.size())
+            return doubts.get(position);
+        else
+            return merged.get(position - doubts.size());
     }
 
     @Override
@@ -188,7 +196,8 @@ public class DoubtsListAdapter extends BaseAdapter {
             convertView = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.doubts_list_item,parent, false);
         }
-        DoubtItemViewBinder.bind(convertView, getItem(position), doubtHandler);
+        DoubtItemViewBinder
+            .bind(convertView, getItem(position), doubtHandler, position >= doubts.size());
         return convertView;
     }
 

@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.ScrollPane;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -17,20 +18,26 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
 public class DoubtHandler{
 	Map<Integer, Doubt> doubts;
+	Map<Integer, Integer> locks; // 0 - free; 1 - server; 2 - client;
 	int totalCount;
 	Broadcaster broadcaster;
 	int selected;
 	
 	DoubtHandler(Broadcaster caster) {
 		doubts = new HashMap<Integer, Doubt>();
+		locks = new HashMap<Integer, Integer>();
 		totalCount = 0;
 		broadcaster = caster;
 		selected = -1;
@@ -43,9 +50,23 @@ public class DoubtHandler{
 	
 	public void addDoubt(Doubt tDoubt) {
 		doubts.put(tDoubt.DoubtId, tDoubt);
+		locks.put(tDoubt.DoubtId, 0);
         if (tDoubt.linesReceived == tDoubt.lines) {
         	addDoubtToGrid(tDoubt);
         }
+	}
+	
+	public boolean getLock(int doubtId, int who) {
+		if (locks.get(doubtId) == 0) {
+			locks.put(doubtId, who);
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	public void releaseLock(int doubtId) {
+		locks.put(doubtId, 0);
 	}
 	
 	public void editDoubt(int doubtId, String dbt) {
@@ -90,7 +111,7 @@ public class DoubtHandler{
 		List<String> instr = new ArrayList<>();
 		for (Entry<Integer,Doubt> i : doubts.entrySet()) {
 			Doubt doubt = i.getValue();
-			if (doubt != null) {
+			if (doubt != null && doubt.parentId == -1) {
 				instr.addAll(doubt.getInstr());
 				instr.add("Up|" + (doubt.hasUpvoted(roll) ? roll : "-1") + "|" +
 					Integer.toString(doubt.DoubtId) + "|" +
@@ -128,6 +149,35 @@ public class DoubtHandler{
 		};
 	}
 	
+	private Timer getTimer(final JButton timeButton, final Box panel, final int doubtId) {
+		Timer timer = new Timer(1000, new ActionListener() {
+			int time = 45;
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				timeButton.setText("Extend (" + Integer.toString(time) + ")");
+				time--;
+				if (time == 0) {
+					Window w = SwingUtilities.getWindowAncestor(panel);
+					if (w != null) {
+						w.setVisible(false);
+						releaseLock(doubtId);
+					}
+				}
+			}
+		});
+		return timer;
+	}
+	
+	private JOptionPane getOptionPane(JComponent parent) {
+        JOptionPane pane = null;
+        if (!(parent instanceof JOptionPane)) {
+            pane = getOptionPane((JComponent)parent.getParent());
+        } else {
+            pane = (JOptionPane) parent;
+        }
+        return pane;
+    }
+	
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	private void rightClickAction(MouseEvent e, final int doubtId) {
 		if (e.isPopupTrigger()){
@@ -148,12 +198,22 @@ public class DoubtHandler{
 							}
 							Server.pane.updateUI();
 						}
-						deleteDoubt(doubtId);
-						broadcaster.broadcastMessage("Del|"+Integer.toString(doubtId)+"|-1");
+						if (getLock(doubtId, 1)) {
+							deleteDoubt(doubtId);
+							releaseLock(doubtId);
+							broadcaster.broadcastMessage("Del|"+Integer.toString(doubtId)+"|-1");
+						}
+						else {
+							JOptionPane.showMessageDialog(null,"Can't delete doubt now");
+						}
 						break;
 					} case "Edit": {
 						System.out.println("Edit pressed " + Integer.toString(doubtId));
-						JPanel panel = new JPanel();
+						if (!getLock(doubtId,1)) {
+							JOptionPane.showMessageDialog(null,"Can't modify doubt now");
+							break;
+						} 
+						final Box panel = Box.createVerticalBox();
 						panel.setSize(400, 300);
 						String dbt = doubts.get(doubtId).getDoubt();
 						dbt.replaceAll("\\n","<br>");
@@ -162,30 +222,80 @@ public class DoubtHandler{
 						ScrollPane scroll = new ScrollPane();
 						scroll.setSize(399, 200);
 						scroll.add(text);
+						final JButton timeButton = new JButton("Extend");
+						final List<Timer> timerList = new ArrayList<Timer>();
+						Timer timer = getTimer(timeButton,panel,doubtId);
+						timerList.add(timer);
+						timeButton.addActionListener(new ActionListener() {
+							int count = 2;
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								if (count > 0) {
+									timerList.get(0).stop();
+									timerList.remove(0);
+									timerList.add(getTimer(timeButton,panel,doubtId));
+									timerList.get(0).start();
+									count--;
+									if (count == 0) {
+										timeButton.setEnabled(false);
+									}
+								}	
+							}
+						});
 						panel.add(scroll);
-						int result = JOptionPane.showConfirmDialog(
+						timerList.get(0).start();
+						final JButton okay = new JButton("Confirm");
+						okay.addActionListener(new ActionListener() {
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								getOptionPane((JComponent)e.getSource()).setValue(okay);
+							}
+						});
+						final JButton cancel = new JButton("Cancel");
+						cancel.addActionListener(new ActionListener() {
+							@Override
+							public void actionPerformed(ActionEvent e) {
+								getOptionPane((JComponent)e.getSource()).setValue(cancel);
+							}
+						});
+						int result = JOptionPane.showOptionDialog(
 								null,
 								panel,
-								"Edit the doubt?",
-								JOptionPane.OK_CANCEL_OPTION,
-								JOptionPane.PLAIN_MESSAGE);
-						if (result == JOptionPane.YES_OPTION) {
-							System.out.println("Edited : " + text.getText());
-							editDoubt(doubtId, text.getText());
-							String doubt[] = text.getText().split("[\n]");
-							broadcaster.broadcastMessage("Edit|"
-									+ Integer.toString(doubt.length) + "|"
-									+ doubt[0] + "|" + Integer.toString(doubtId));
-							for (int i = 2; i <= doubt.length; i++) {
-								broadcaster.broadcastMessage("Epp|"
-										+ Integer.toString(i) + "|"
-										+ doubt[i-1] + "|" + Integer.toString(doubtId));
+								"Edit the doubt",
+								JOptionPane.YES_NO_CANCEL_OPTION,
+								JOptionPane.PLAIN_MESSAGE,
+								null,
+								new Object[]{timeButton,okay,cancel},
+								okay);
+						if (result == 1) {
+							String newDoubt = text.getText();
+							if (newDoubt.equals("") ||
+								newDoubt.contains("|") ||
+								newDoubt.split("[ \n]").length == 0) {
+								JOptionPane.showMessageDialog(null,"Invalid Doubt");
+							} else {
+								System.out.println("Edited : " + newDoubt);
+								editDoubt(doubtId, newDoubt);
+								String doubt[] = newDoubt.split("[\n]");
+								broadcaster.broadcastMessage("Edit|"
+										+ Integer.toString(doubt.length) + "|"
+										+ doubt[0] + "|" + Integer.toString(doubtId));
+								for (int i = 2; i <= doubt.length; i++) {
+									broadcaster.broadcastMessage("Epp|"
+											+ Integer.toString(i) + "|"
+											+ doubt[i-1] + "|" + Integer.toString(doubtId));
+								}
 							}
 						} else {
 							System.out.println("Editing cancelled");
 						}
+						releaseLock(doubtId);
 						break;
 					} case "Merge With": {
+						if (!getLock(doubtId, 1)) {
+							JOptionPane.showMessageDialog(null, "Can't merge this doubt now");
+							break;
+						}
 						selected = doubtId;
 						for (int i = 0; i < 5; i++) {
 							JTextArea comp = (JTextArea) Server.pane.getComponent(5*doubtId + i);
@@ -196,6 +306,7 @@ public class DoubtHandler{
 						Server.pane.updateUI();
 						break;
 					} case "Cancel Merge": {
+						releaseLock(doubtId);
 						selected = -1;
 						for (int i = 0; i < 5; i++) {
 							JTextArea comp = (JTextArea) Server.pane.getComponent(5*doubtId + i);
@@ -206,6 +317,10 @@ public class DoubtHandler{
 						Server.pane.updateUI();
 						break;
 					} case "Merge Into": {
+						if (!getLock(doubtId,1)) {
+							JOptionPane.showMessageDialog(null, "Can't merge into this doubt now");
+							break;
+						}
 						Doubt child = doubts.get(selected);
 						Doubt parent = doubts.get(doubtId);
 						child.parentId = doubtId;
@@ -223,6 +338,8 @@ public class DoubtHandler{
 						broadcaster.broadcastMessage("Merge|"
 								+ Integer.toString(selected) + "|"
 								+ Integer.toString(doubtId));
+						releaseLock(selected);
+						releaseLock(doubtId);
 						selected = -1;
 						break;
 					}
