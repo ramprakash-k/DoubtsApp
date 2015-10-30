@@ -7,6 +7,7 @@ import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
@@ -341,6 +342,28 @@ public class MainActivity
                 case "Merge":
                     doubtsFragment.mergeDoubt(Integer.parseInt(info[1]),Integer.parseInt(info[2]));
                     break;
+                // ELock | doubtId | 1/0
+                case "ELock":
+                    if (info[2].equals("1")) {
+                        editDoubt(Integer.parseInt(info[1]));
+                    } else {
+                        Toast.makeText(
+                            MainActivity.this,
+                            "Can't modify doubt now",
+                            Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                // DLock | doubtId | 1/0
+                case "DLock":
+                    if (info[2].equals("1")) {
+                        deleteDoubt(Integer.parseInt(info[1]));
+                    } else {
+                        Toast.makeText(
+                            MainActivity.this,
+                            "Can't delete doubt now",
+                            Toast.LENGTH_SHORT).show();
+                    }
+                    break;
             }
         }
 
@@ -377,6 +400,14 @@ public class MainActivity
 
     @Override
     public boolean onEditDoubt(final int doubtId) {
+        new DoubtOutAsync().executeOnExecutor(
+            AsyncTask.THREAD_POOL_EXECUTOR,
+            Integer.toString(doubtId),
+            "ELock");
+        return true;
+    }
+
+    private void editDoubt(final int doubtId) {
         new AddDoubtsPrompt(this, new AddDoubtsPrompt.PostDoubtListener() {
             @Override
             public void onPostDoubt(String doubt) {
@@ -390,30 +421,82 @@ public class MainActivity
                     doubt,
                     "Add");
             }
+        }, new AddDoubtsPrompt.EditCancelListener() {
+            @Override
+            public void onEditCancel() {
+                new DoubtOutAsync().executeOnExecutor(
+                    AsyncTask.THREAD_POOL_EXECUTOR,
+                    Integer.toString(doubtId),
+                    "RLock");
+            }
         }, doubtsFragment.getDoubt(doubtId)).create().show();
-        return false;
     }
 
     @Override
     public boolean onDeleteDoubt(final int doubtId) {
-        new AlertDialog.Builder(this)
+        new DoubtOutAsync().executeOnExecutor(
+            AsyncTask.THREAD_POOL_EXECUTOR,
+            Integer.toString(doubtId),
+            "DLock");
+        return true;
+    }
+
+    private void deleteDoubt(final int doubtId) {
+        final AlertDialog dialog = new AlertDialog.Builder(this)
             .setMessage(getString(R.string.delete_confirm))
             .setCancelable(true)
-            .setPositiveButton("Confirm",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        new DoubtOutAsync().executeOnExecutor(
-                            AsyncTask.THREAD_POOL_EXECUTOR,
-                            Integer.toString(doubtId),
-                            "Del",
-                            rollNo);
-                    }
-                })
+            .setPositiveButton("Confirm", null)
             .setNegativeButton("Cancel", null)
-            .create()
-            .show();
-        return true;
+            .setNeutralButton("wtf", null)
+            .create();
+        final CountDownTimer timer = new CountDownTimer(10000,1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                dialog.getButton(DialogInterface.BUTTON_NEUTRAL)
+                    .setText(Long.toString(millisUntilFinished/1000));
+            }
+            @Override
+            public void onFinish() {
+                dialog.dismiss();
+                new DoubtOutAsync().executeOnExecutor(
+                    AsyncTask.THREAD_POOL_EXECUTOR,
+                    Integer.toString(doubtId),
+                    "RLock");
+            }
+        };
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface d) {
+                timer.start();
+                dialog.getButton(DialogInterface.BUTTON_NEUTRAL).setClickable(false);
+                dialog.getButton(DialogInterface.BUTTON_POSITIVE)
+                    .setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            new DoubtOutAsync().executeOnExecutor(
+                                AsyncTask.THREAD_POOL_EXECUTOR,
+                                Integer.toString(doubtId),
+                                "Del",
+                                rollNo);
+                            timer.cancel();
+                            dialog.dismiss();
+                        }
+                    });
+                dialog.getButton(DialogInterface.BUTTON_NEGATIVE)
+                    .setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            timer.cancel();
+                            dialog.dismiss();
+                            new DoubtOutAsync().executeOnExecutor(
+                                AsyncTask.THREAD_POOL_EXECUTOR,
+                                Integer.toString(doubtId),
+                                "RLock");
+                        }
+                    });
+            }
+        });
+        dialog.show();
     }
 
     private class DoubtOutAsync extends AsyncTask<String,Void,Void> {
@@ -452,6 +535,15 @@ public class MainActivity
                             break;
                         case "Del":
                             out.writeBytes("Del|" + msg + "|" + params[2] + "\n");
+                            break;
+                        case "ELock":
+                            out.writeBytes("ELock|" + msg + "\n");
+                            break;
+                        case "DLock":
+                            out.writeBytes("DLock|" + msg + "\n");
+                            break;
+                        case "RLock":
+                            out.writeBytes("RLock|" + msg + "\n");
                             break;
                     }
                 }

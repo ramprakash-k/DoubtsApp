@@ -172,7 +172,24 @@ public class ClientHandler implements Observer, Runnable {
 			}
 			case "Del": {
 				doubtHandler.deleteDoubt(Integer.parseInt(info[1]));
+				doubtHandler.releaseLock(Integer.parseInt(info[1]));
 				broadcaster.broadcastMessage(s);
+				break;
+			}
+			case "ELock":
+			case "DLock": {
+				if (doubtHandler.getLock(Integer.parseInt(info[1]), 2)) {
+					System.out.println(s + "|1");
+					out.writeBytes(s + "|1\n");
+				} else {
+					System.out.println(s + "|0");
+					out.writeBytes(s + "|0\n");
+				}
+				break;
+			}
+			case "RLock": {
+				System.out.println(s);
+				doubtHandler.releaseLock(Integer.parseInt(info[1]));
 				break;
 			}
 		}

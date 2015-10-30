@@ -3,4 +3,5 @@
     <color name="titlebar_normal">#ff0000ff</color>
     <color name="titlebar_pressed">#ff0000aa</color>
     <color name="menu_item_selected">#ff0044ff</color>
+    <color name="gray">#33ffffff</color>
 </resources>
