@@ -100,5 +100,12 @@ public class DoubtItemViewBinder {
         });
         view.findViewById(R.id.upvote_icon).setOnClickListener(listener);
         view.findViewById(R.id.upvote_text).setOnClickListener(listener);
+        if (merged) {
+            view.findViewById(R.id.upvote_icon).setVisibility(View.GONE);
+            view.findViewById(R.id.upvote_text).setVisibility(View.GONE);
+        } else {
+            view.findViewById(R.id.upvote_icon).setVisibility(View.VISIBLE);
+            view.findViewById(R.id.upvote_text).setVisibility(View.VISIBLE);
+        }
     }
 }
