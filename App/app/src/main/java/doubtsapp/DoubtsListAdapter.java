@@ -76,7 +76,7 @@ public class DoubtsListAdapter extends BaseAdapter {
         idToPositionMap = new HashMap<>();
         currentComparator = new EarliestComparator();
         this.doubtHandler = doubtHandler;
-        SHOW_MERGED = false;
+        SHOW_MERGED = true;
     }
 
     public void setFilterType(FiltersManager.FilterType filter) {
@@ -107,6 +107,10 @@ public class DoubtsListAdapter extends BaseAdapter {
     }
 
     public void addDoubt(Doubt doubt) {
+        if (doubt.parentId != -1) {
+            merged.add(doubt);
+            return;
+        }
         int position;
         if (currentComparator != null) {
             position = Collections.binarySearch(doubts, doubt, currentComparator);
@@ -146,11 +150,15 @@ public class DoubtsListAdapter extends BaseAdapter {
         merged.add(doubt);
         parent.childCount = parent.childCount + 1 + doubt.childCount;
         parent.isOwnDoubt = false;
+        parent.hasUserUpVoted = parent.hasUserUpVoted || doubt.hasUserUpVoted;
         resetPositionMap(position);
         notifyDataSetChanged();
     }
 
     public void updateDoubt(int doubtId, int newCnt, boolean userChange, boolean isUpvote) {
+        if (!idToPositionMap.containsKey(doubtId)) {
+            return;
+        }
         Doubt doubt = doubts.get(idToPositionMap.get(doubtId));
         doubt.upVotesCount = newCnt;
         if (userChange) doubt.hasUserUpVoted = isUpvote;

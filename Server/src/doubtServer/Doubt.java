@@ -16,7 +16,6 @@ public class Doubt {
     public String rollNo;
     public String name;
     public String time;
-    public int upVotesCount;
     private Set<String> upVoters;
     private Map<Integer, String> doubt;
 
@@ -27,7 +26,6 @@ public class Doubt {
         linesReceived = 0;
         rollNo = null;
         name = null;
-        upVotesCount = 0;
         doubt = new HashMap<>();
         upVoters = new HashSet<>();
     }
@@ -58,11 +56,16 @@ public class Doubt {
     	return upVoters.size();
     }
     
+    public int getUpVotesCount() {
+    	return upVoters.size();
+    }
+    
     public List<String> getInstr() {
     	List<String> instr = new ArrayList<>();
     	String m = "Add|" + Integer.toString(lines) + "|" +
     			name + "|" + rollNo + "|" + doubt.get(1) + "|" +
-    			time + "|" + Integer.toString(DoubtId);
+    			time + "|" + Integer.toString(parentId) + "|" +
+    			Integer.toString(childCount) + "|" + Integer.toString(DoubtId);
     	instr.add(m);
     	for (int i = 2; i <= lines; i++) {
     		m = "App|" + Integer.toString(i) + "|" +
@@ -74,5 +77,10 @@ public class Doubt {
     
     public boolean hasUpvoted(String roll) {
     	return upVoters.contains(roll);
+    }
+    
+    public int mergeUpvoters(Doubt doubt) {
+    	upVoters.addAll(doubt.upVoters);
+    	return upVoters.size();
     }
 }

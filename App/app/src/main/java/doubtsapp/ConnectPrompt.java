@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import in.ac.iitb.doubtsapp.R;
 
@@ -39,11 +40,18 @@ public class ConnectPrompt extends DialogFragment {
                 public void onClick(View v) {
                     String ipText = ipTextView.getText().toString();
                     String port = portView.getText().toString();
-                    Editor editor = preferences.edit();
-                    editor.putString("ipPref",ipText);
-                    editor.putString("portPref",port);
-                    editor.apply();
-                    ((MainActivity) getActivity()).connect(ipText, port);
+                    if (ipText.equals("") || port.equals("")) {
+                        Toast.makeText(
+                            v.getContext(),
+                            "Enter valid IP/Port",
+                            Toast.LENGTH_SHORT).show();
+                    } else {
+                        Editor editor = preferences.edit();
+                        editor.putString("ipPref", ipText);
+                        editor.putString("portPref", port);
+                        editor.apply();
+                        ((MainActivity) getActivity()).connect(ipText, port);
+                    }
                 }
             });
         builder.setView(view);

@@ -30,29 +30,34 @@ public class Server {
 		gbc.weighty = 1;
 		gbc.anchor = GridBagConstraints.NORTHWEST;
 		
+		JLabel label0 = new JLabel("Doubt Id");
+		label0.setBorder(BorderFactory.createRaisedBevelBorder());
+		gbc.weightx = 1;gbc.gridx = 0;gbc.gridy = 0;
+		pane.add(label0, gbc);
+		
 		JLabel label1 = new JLabel("Name");
 		label1.setBorder(BorderFactory.createRaisedBevelBorder());
-		gbc.weightx = 1;gbc.gridx = 0;gbc.gridy = 0;
+		gbc.weightx = 1;gbc.gridx = 1;gbc.gridy = 0;
 		pane.add(label1, gbc);
 		
 		JLabel label2 = new JLabel("Roll no");
 		label2.setBorder(BorderFactory.createRaisedBevelBorder());
-		gbc.weightx = 1;gbc.gridx = 1;gbc.gridy = 0;
+		gbc.weightx = 1;gbc.gridx = 2;gbc.gridy = 0;
 		pane.add(label2, gbc);
 		
 		JLabel label3 = new JLabel("Time");
 		label3.setBorder(BorderFactory.createRaisedBevelBorder());
-		gbc.weightx = 1;gbc.gridx = 2;gbc.gridy = 0;
+		gbc.weightx = 1;gbc.gridx = 3;gbc.gridy = 0;
 		pane.add(label3, gbc);
 		
 		JLabel label4 = new JLabel("Doubt");
 		label4.setBorder(BorderFactory.createRaisedBevelBorder());
-		gbc.weightx = 5;gbc.gridx = 3;gbc.gridy = 0;
+		gbc.weightx = 5;gbc.gridx = 4;gbc.gridy = 0;
 		pane.add(label4, gbc);
 		
 		JLabel label5 = new JLabel("Upvotes");
 		label5.setBorder(BorderFactory.createRaisedBevelBorder());
-		gbc.weightx = 1;gbc.gridx = 4;gbc.gridy = 0;
+		gbc.weightx = 1;gbc.gridx = 5;gbc.gridy = 0;
 		pane.add(label5, gbc);
 		scrollPane.add(pane);
 	}

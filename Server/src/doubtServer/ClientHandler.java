@@ -144,7 +144,8 @@ public class ClientHandler implements Observer, Runnable {
 				doubt.time = time;
 				doubt.DoubtId = doubtId;
 				doubtHandler.addDoubt(doubt);
-				s = s + "|" + time + "|" + Integer.toString(doubtId);
+				s = s + "|" + time + "|" + Integer.toString(doubt.parentId) + "|" +
+						Integer.toString(doubt.childCount) + "|" + Integer.toString(doubtId);
 				broadcaster.broadcastMessage(s);
 				for (int i = 2; i <= doubt.lines; i++) {
 					s = in.readLine();

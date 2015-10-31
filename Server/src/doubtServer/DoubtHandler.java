@@ -76,7 +76,7 @@ public class DoubtHandler{
 			doubt.setDoubtLine(i, dbts[i-1]);
 		}
 		doubt.linesReceived = doubt.lines = dbts.length;
-		JTextArea comp = (JTextArea) Server.pane.getComponent(5*doubtId + 3);
+		JTextArea comp = (JTextArea) Server.pane.getComponent(6*doubtId + 4);
 		dbt.replaceAll("\\n", "<br>");
 		comp.setText(dbt);
 		Server.pane.updateUI();
@@ -93,7 +93,7 @@ public class DoubtHandler{
 	
 	public int upVoteDoubt(int doubtId, String roll) {
 		int nc = doubts.get(doubtId).upVote(roll);
-		JTextArea comp = (JTextArea) Server.pane.getComponent(5*doubtId + 4);
+		JTextArea comp = (JTextArea) Server.pane.getComponent(6*doubtId + 5);
 		comp.setText(Integer.toString(nc));
 		Server.pane.updateUI();
 		return nc;
@@ -101,7 +101,7 @@ public class DoubtHandler{
 	
 	public int nupVoteDoubt(int doubtId, String roll) {
 		int nc = doubts.get(doubtId).nupVote(roll);
-		JTextArea comp = (JTextArea) Server.pane.getComponent(5*doubtId + 4);
+		JTextArea comp = (JTextArea) Server.pane.getComponent(6*doubtId + 5);
 		comp.setText(Integer.toString(nc));
 		Server.pane.updateUI();
 		return nc;
@@ -111,11 +111,11 @@ public class DoubtHandler{
 		List<String> instr = new ArrayList<>();
 		for (Entry<Integer,Doubt> i : doubts.entrySet()) {
 			Doubt doubt = i.getValue();
-			if (doubt != null && doubt.parentId == -1) {
+			if (doubt != null) {
 				instr.addAll(doubt.getInstr());
 				instr.add("Up|" + (doubt.hasUpvoted(roll) ? roll : "-1") + "|" +
 					Integer.toString(doubt.DoubtId) + "|" +
-					Integer.toString(doubt.upVotesCount));
+					Integer.toString(doubt.getUpVotesCount()));
 			}
 		}
 		return instr;
@@ -124,8 +124,8 @@ public class DoubtHandler{
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	public void deleteDoubt(int doubtId) {
 		doubts.remove(doubtId);
-		for (int i = 0; i < 5; i++) {
-			JTextArea comp = (JTextArea) Server.pane.getComponent(5*doubtId + i);
+		for (int i = 0; i < 6; i++) {
+			JTextArea comp = (JTextArea) Server.pane.getComponent(6*doubtId + i);
 			Map attr = comp.getFont().getAttributes();
 			attr.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
 			comp.setFont(new Font(attr));
@@ -150,7 +150,8 @@ public class DoubtHandler{
 	}
 	
 	private Timer getTimer(final JButton timeButton, final Box panel, final int doubtId) {
-		Timer timer = new Timer(1000, new ActionListener() {
+		final Timer timer = new Timer(1000, null);
+		timer.addActionListener(new ActionListener() {
 			int time = 45;
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -162,6 +163,39 @@ public class DoubtHandler{
 						w.setVisible(false);
 						releaseLock(doubtId);
 					}
+					timer.stop();
+				}
+			}
+		});
+		return timer;
+	}
+	
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	private Timer getMergeTimer() {
+		final Timer timer = new Timer(1000, null);
+		timer.addActionListener(new ActionListener() {
+			int time = 15;
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				time--;
+				if (time == 0 && selected != -1) {
+					releaseLock(selected);
+					for (int i = 0; i < 6; i++) {
+						JTextArea comp = (JTextArea) Server.pane.getComponent(6*selected + i);
+						Map attr = comp.getFont().getAttributes();
+						attr.put(TextAttribute.BACKGROUND, Color.WHITE);
+						comp.setFont(new Font(attr));
+					}
+					selected = -1;
+					Server.pane.updateUI();
+					timer.stop();
+				}
+				if (time == 0) {
+					System.out.println("Timer stopped manually");
+					timer.stop();
+				}
+				if (time < 0) {
+					System.out.println("Not Stopping " + time);
 				}
 			}
 		});
@@ -185,13 +219,14 @@ public class DoubtHandler{
 				@Override
 				public void actionPerformed(ActionEvent a) {
 					String s = a.getActionCommand();
+					final Timer mergeTimer = getMergeTimer();
 					switch(s) {
 					case "Delete": {
 						System.out.println("Delete pressed " + Integer.toString(doubtId));
 						if (selected == doubtId) {
 							selected = -1;
-							for (int i = 0; i < 5; i++) {
-								JTextArea comp = (JTextArea) Server.pane.getComponent(5*doubtId + i);
+							for (int i = 0; i < 6; i++) {
+								JTextArea comp = (JTextArea) Server.pane.getComponent(6*doubtId + i);
 								Map attr = comp.getFont().getAttributes();
 								attr.put(TextAttribute.BACKGROUND, Color.WHITE);
 								comp.setFont(new Font(attr));
@@ -297,19 +332,21 @@ public class DoubtHandler{
 							break;
 						}
 						selected = doubtId;
-						for (int i = 0; i < 5; i++) {
-							JTextArea comp = (JTextArea) Server.pane.getComponent(5*doubtId + i);
+						for (int i = 0; i < 6; i++) {
+							JTextArea comp = (JTextArea) Server.pane.getComponent(6*doubtId + i);
 							Map attr = comp.getFont().getAttributes();
 							attr.put(TextAttribute.BACKGROUND, Color.YELLOW);
 							comp.setFont(new Font(attr));
 						}
 						Server.pane.updateUI();
+						mergeTimer.start();
 						break;
 					} case "Cancel Merge": {
+						mergeTimer.stop();
 						releaseLock(doubtId);
 						selected = -1;
-						for (int i = 0; i < 5; i++) {
-							JTextArea comp = (JTextArea) Server.pane.getComponent(5*doubtId + i);
+						for (int i = 0; i < 6; i++) {
+							JTextArea comp = (JTextArea) Server.pane.getComponent(6*doubtId + i);
 							Map attr = comp.getFont().getAttributes();
 							attr.put(TextAttribute.BACKGROUND, Color.WHITE);
 							comp.setFont(new Font(attr));
@@ -321,12 +358,14 @@ public class DoubtHandler{
 							JOptionPane.showMessageDialog(null, "Can't merge into this doubt now");
 							break;
 						}
+						mergeTimer.stop();
 						Doubt child = doubts.get(selected);
 						Doubt parent = doubts.get(doubtId);
 						child.parentId = doubtId;
 						parent.childCount = parent.childCount + 1 + child.childCount;
-						for (int i = 0; i < 5; i++) {
-							JTextArea comp = (JTextArea) Server.pane.getComponent(5*selected + i);
+						int newUp = parent.mergeUpvoters(child);
+						for (int i = 0; i < 6; i++) {
+							JTextArea comp = (JTextArea) Server.pane.getComponent(6*selected + i);
 							Map attr = comp.getFont().getAttributes();
 							attr.put(TextAttribute.BACKGROUND, Color.LIGHT_GRAY);
 							comp.setFont(new Font(attr));
@@ -334,10 +373,13 @@ public class DoubtHandler{
 								comp.removeMouseListener(it);
 							}
 						}
+						JTextArea comp = (JTextArea) Server.pane.getComponent(6*selected);
+						comp.setText(selected + "/" + doubtId);
+						JTextArea comp1 = (JTextArea) Server.pane.getComponent(6*doubtId + 5);
+						comp1.setText(Integer.toString(newUp));
 						Server.pane.updateUI();
-						broadcaster.broadcastMessage("Merge|"
-								+ Integer.toString(selected) + "|"
-								+ Integer.toString(doubtId));
+						broadcaster.broadcastMessage("Merge|" + selected + "|" + doubtId);
+						broadcaster.broadcastMessage("Up|-1|" + doubtId + "|" + newUp);
 						releaseLock(selected);
 						releaseLock(doubtId);
 						selected = -1;
@@ -375,25 +417,32 @@ public class DoubtHandler{
 		
 		MouseAdapter adapter = getAdapter(doubt.DoubtId);
 		
+		JTextArea label0 = new JTextArea(doubt.DoubtId + (doubt.parentId == -1 ? "" : "/"+doubt.parentId));
+		label0.setEditable(false);
+		label0.setBorder(BorderFactory.createRaisedSoftBevelBorder());
+		label0.addMouseListener(adapter);
+		gbc.weightx = 1;gbc.gridx = 0;gbc.gridy = doubt.DoubtId;
+		Server.pane.add(label0, gbc);
+		
 		JTextArea label1 = new JTextArea(doubt.name);
 		label1.setEditable(false);
 		label1.setBorder(BorderFactory.createRaisedSoftBevelBorder());
 		label1.addMouseListener(adapter);
-		gbc.weightx = 1;gbc.gridx = 0;gbc.gridy = doubt.DoubtId;
+		gbc.weightx = 1;gbc.gridx = 1;gbc.gridy = doubt.DoubtId;
 		Server.pane.add(label1, gbc);
 		
 		JTextArea label2 = new JTextArea(doubt.rollNo);
 		label2.setEditable(false);
 		label2.setBorder(BorderFactory.createRaisedSoftBevelBorder());
 		label2.addMouseListener(adapter);
-		gbc.weightx = 1;gbc.gridx = 1;gbc.gridy = doubt.DoubtId;
+		gbc.weightx = 1;gbc.gridx = 2;gbc.gridy = doubt.DoubtId;
 		Server.pane.add(label2, gbc);
 		
 		JTextArea label3 = new JTextArea(doubt.time);
 		label3.setEditable(false);
 		label3.setBorder(BorderFactory.createRaisedSoftBevelBorder());
 		label3.addMouseListener(adapter);
-		gbc.weightx = 1;gbc.gridx = 2;gbc.gridy = doubt.DoubtId;
+		gbc.weightx = 1;gbc.gridx = 3;gbc.gridy = doubt.DoubtId;
 		Server.pane.add(label3, gbc);
 		
 		String dbt = doubt.getDoubt();
@@ -402,14 +451,14 @@ public class DoubtHandler{
 		label4.setEditable(false);
 		label4.setBorder(BorderFactory.createRaisedSoftBevelBorder());
 		label4.addMouseListener(adapter);
-		gbc.weightx = 5;gbc.gridx = 3;gbc.gridy = doubt.DoubtId;
+		gbc.weightx = 5;gbc.gridx = 4;gbc.gridy = doubt.DoubtId;
 		Server.pane.add(label4, gbc);
 		
-		JTextArea label5 = new JTextArea(Integer.toString(doubt.upVotesCount));
+		JTextArea label5 = new JTextArea(Integer.toString(doubt.getUpVotesCount()));
 		label5.setEditable(false);
 		label5.setBorder(BorderFactory.createRaisedSoftBevelBorder());
 		label5.addMouseListener(adapter);
-		gbc.weightx = 1;gbc.gridx = 4;gbc.gridy = doubt.DoubtId;
+		gbc.weightx = 1;gbc.gridx = 5;gbc.gridy = doubt.DoubtId;
 		Server.pane.add(label5, gbc);
 		Server.pane.updateUI();
 		System.out.println("Row Added");

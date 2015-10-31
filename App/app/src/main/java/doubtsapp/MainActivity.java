@@ -273,7 +273,7 @@ public class MainActivity
                 case "Valid":
                     loginPrompt.loginSuccess(info[1]);
                     break;
-                // Add | lines | name | roll | doubtLine1 | time | doubtId
+                // Add | lines | name | roll | doubtLine1 | time | parentId | childCount | doubtId
                 case "Add": {
                     Doubt doubt = new Doubt();
                     doubt.lines = Integer.parseInt(info[1]);
@@ -287,7 +287,9 @@ public class MainActivity
                     }
                     doubt.setDoubtLine(1, info[4]);
                     doubt.time = info[5];
-                    doubt.DoubtId = Integer.parseInt(info[6]);
+                    doubt.parentId = Integer.parseInt(info[6]);
+                    doubt.childCount = Integer.parseInt(info[7]);
+                    doubt.DoubtId = Integer.parseInt(info[8]);
                     doubtsFragment.addDoubt(doubt);
                     break;
                 }
