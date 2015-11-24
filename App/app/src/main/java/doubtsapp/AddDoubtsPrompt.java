@@ -122,6 +122,11 @@ public class AddDoubtsPrompt extends AlertDialog.Builder {
                                     activity,
                                     "Invalid Doubt",
                                     Toast.LENGTH_SHORT).show();
+                            } else if (hasEmptyLine(doubt)) {
+                                Toast.makeText(
+                                        activity,
+                                        "Avoid empty lines in the Doubt",
+                                        Toast.LENGTH_SHORT).show();
                             } else if (doubt.contains("|")) {
                                 Toast.makeText(
                                     activity,
@@ -149,5 +154,18 @@ public class AddDoubtsPrompt extends AlertDialog.Builder {
         });
         dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         return dialog;
+    }
+
+    private boolean hasEmptyLine(String text) {
+        while (text.length() > 0) {
+            int pos = text.indexOf('\n');
+            if (pos == -1) {
+                return text.split("[ ]").length == 0;
+            }
+            String cur = text.substring(0,pos);
+            text = text.substring(pos+1);
+            if (cur.equals("") || cur.split("[ ]").length == 0) return true;
+        }
+        return false;
     }
 }
