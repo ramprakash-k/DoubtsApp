@@ -135,6 +135,7 @@ public class Server {
 				break;
 			}
 		}
+		doubtHandler.SaveAll();
 		System.exit(0);
 	}
 }
