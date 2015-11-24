@@ -16,6 +16,8 @@ public class Doubt {
     public String rollNo;
     public String name;
     public String time;
+    public int position;
+    public boolean deleted;
     private Set<String> upVoters;
     private Map<Integer, String> doubt;
 
@@ -24,6 +26,8 @@ public class Doubt {
     	childCount = 0;
         lines = 1;
         linesReceived = 0;
+        position = -1;
+        deleted = false;
         rollNo = null;
         name = null;
         doubt = new HashMap<>();

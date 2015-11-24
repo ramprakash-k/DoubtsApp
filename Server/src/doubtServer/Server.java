@@ -1,10 +1,13 @@
 package doubtServer;
 
+import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.GridBagConstraints;
+import java.awt.FlowLayout;
 import java.awt.GridBagLayout;
 import java.awt.ScrollPane;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
@@ -12,54 +15,73 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 
 public class Server {
 	
 	public static JPanel pane;
+	public static GridBagLayout layout;
+	public static JPanel panel;
 	
-	public static void initPane(Container container) {
+	public static void initPane(Container container, final DoubtHandler doubtHandler) {
 		ScrollPane scrollPane = new ScrollPane(ScrollPane.SCROLLBARS_AS_NEEDED);
-		container.add(scrollPane);
-		pane = new JPanel();
-		pane.setLayout(new GridBagLayout());
-		GridBagConstraints gbc = new GridBagConstraints();
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.weighty = 1;
-		gbc.anchor = GridBagConstraints.NORTHWEST;
+		panel = new JPanel();
+		panel.setLayout(new FlowLayout(FlowLayout.LEFT,0,0));
 		
-		JLabel label0 = new JLabel("Doubt Id");
+		JLabel label0 = new JLabel("Doubt Id", SwingConstants.CENTER);
 		label0.setBorder(BorderFactory.createRaisedBevelBorder());
-		gbc.weightx = 1;gbc.gridx = 0;gbc.gridy = 0;
-		pane.add(label0, gbc);
+		label0.setPreferredSize(new Dimension(90,30));
+		panel.add(label0);
 		
-		JLabel label1 = new JLabel("Name");
+		JLabel label1 = new JLabel("Name", SwingConstants.CENTER);
 		label1.setBorder(BorderFactory.createRaisedBevelBorder());
-		gbc.weightx = 1;gbc.gridx = 1;gbc.gridy = 0;
-		pane.add(label1, gbc);
+		label1.setPreferredSize(new Dimension(140,30));
+		panel.add(label1);
 		
-		JLabel label2 = new JLabel("Roll no");
+		JLabel label2 = new JLabel("Roll no", SwingConstants.CENTER);
 		label2.setBorder(BorderFactory.createRaisedBevelBorder());
-		gbc.weightx = 1;gbc.gridx = 2;gbc.gridy = 0;
-		pane.add(label2, gbc);
+		label2.setPreferredSize(new Dimension(140,30));
+		panel.add(label2);
 		
-		JLabel label3 = new JLabel("Time");
+		JLabel label3 = new JLabel("Time \u25bd", SwingConstants.CENTER);
 		label3.setBorder(BorderFactory.createRaisedBevelBorder());
-		gbc.weightx = 1;gbc.gridx = 3;gbc.gridy = 0;
-		pane.add(label3, gbc);
+		label3.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent me) {
+				doubtHandler.sortClickAction(true);
+			}
+		});
+		label3.setPreferredSize(new Dimension(130,30));
+		panel.add(label3);
 		
-		JLabel label4 = new JLabel("Doubt");
+		JLabel label4 = new JLabel("Doubt", SwingConstants.CENTER);
 		label4.setBorder(BorderFactory.createRaisedBevelBorder());
-		gbc.weightx = 5;gbc.gridx = 4;gbc.gridy = 0;
-		pane.add(label4, gbc);
+		label4.setPreferredSize(new Dimension(400,30));
+		panel.add(label4);
 		
-		JLabel label5 = new JLabel("Upvotes");
+		JLabel label5 = new JLabel("Upvotes", SwingConstants.CENTER);
 		label5.setBorder(BorderFactory.createRaisedBevelBorder());
-		gbc.weightx = 1;gbc.gridx = 5;gbc.gridy = 0;
-		pane.add(label5, gbc);
+		label5.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent me) {
+				doubtHandler.sortClickAction(false);
+			}
+		});
+		label5.setPreferredSize(new Dimension(90,30));
+		panel.add(label5);
+		
+		pane = new JPanel();
+		layout = new GridBagLayout();
+		pane.setLayout(layout);
 		scrollPane.add(pane);
+		
+		Box box = Box.createVerticalBox();
+		box.add(panel);
+		box.add(scrollPane);
+		scrollPane.setPreferredSize(new Dimension(950,650));
+		container.add(box, BorderLayout.NORTH);
 	}
 	
 	static ServerSocket serverSocket = null;
@@ -89,11 +111,11 @@ public class Server {
 		frame.setMinimumSize(new Dimension(1000, 700));
 		frame.setMaximumSize(new Dimension(1000, 700));
 		frame.setResizable(false);
-		initPane(frame.getContentPane());
-		frame.pack();
-		frame.setVisible(true);
 		final Broadcaster broadcaster = new Broadcaster();
 		final DoubtHandler doubtHandler = new DoubtHandler(broadcaster);
+		initPane(frame.getContentPane(), doubtHandler);
+		frame.pack();
+		frame.setVisible(true);
 		System.out.println("Server started at port number "+Integer.toString(portNumber));
 		while (frame.isVisible()) {
 			try {
