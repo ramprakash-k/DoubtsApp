@@ -12,7 +12,13 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.font.TextAttribute;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -116,6 +122,26 @@ public class DoubtHandler{
 			}
 		}
 		return instr;
+	}
+	
+	public void SaveAll() {
+		String fileName = new SimpleDateFormat("dd.MM").format(Calendar.getInstance().getTime());
+		File file = new File("./../../doubts_"+fileName+".txt");
+		try {
+			if (!file.exists()) file.createNewFile();
+			BufferedWriter wr = new BufferedWriter(new FileWriter(file.getAbsoluteFile(), true));
+			for (Entry<Integer,Doubt> i : doubts.entrySet()) {
+				Doubt doubt = i.getValue();
+				wr.write(i.getKey() + " : " + doubt.name + " (" + doubt.rollNo + ") @ " + doubt.time + "\r\n");
+				wr.write(i.getValue().getDoubt() + "\r\n");
+				wr.write(doubt.getUpVotesCount() + " Upvotes\r\n\r\n");
+			}
+			wr.write("----------------End of session---------------\r\n\r\n");
+			wr.close();
+		} catch(IOException e) {
+			System.out.println("Couldn't write doubts to file");
+			e.printStackTrace();
+		}
 	}
 	
 	@SuppressWarnings({"unchecked", "rawtypes"})
