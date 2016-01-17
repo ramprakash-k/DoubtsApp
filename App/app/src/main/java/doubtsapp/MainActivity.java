@@ -134,11 +134,26 @@ public class MainActivity
 
     private class ConnectAsync extends AsyncTask<String,Void,Socket> {
         ProgressDialog progressDialog;
+        CountDownTimer timer;
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
             progressDialog = ProgressDialog.show(MainActivity.this, "Wait", "Connecting...", false);
+            timer = new CountDownTimer(10000,1000) {
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    // do nothing
+                }
+
+                @Override
+                public void onFinish() {
+                    progressDialog.dismiss();
+                    ConnectAsync.this.cancel(true);
+                    Toast.makeText(MainActivity.this, "Unable to connect", Toast.LENGTH_SHORT).show();
+                }
+            };
+            timer.start();
         }
 
         @Override
@@ -158,6 +173,7 @@ public class MainActivity
         @Override
         protected void onPostExecute(final Socket socket) {
             progressDialog.dismiss();
+            timer.cancel();
             if (socket == null) {
                 Toast.makeText(MainActivity.this, "Unable to connect", Toast.LENGTH_SHORT).show();
             } else {

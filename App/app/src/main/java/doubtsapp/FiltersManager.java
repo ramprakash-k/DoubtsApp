@@ -44,7 +44,7 @@ public class FiltersManager {
 
     public FiltersManager(FilterChangedListener listener) {
         this.listener = listener;
-        currentFilterType = FilterType.TIME_EARLIEST_FIRST;
+        currentFilterType = FilterType.TIME_LATEST_FIRST;
     }
 
     public void onFilterButtonClick(View v) {

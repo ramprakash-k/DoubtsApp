@@ -74,7 +74,7 @@ public class DoubtsListAdapter extends BaseAdapter {
         doubts = new ArrayList<>();
         merged = new ArrayList<>();
         idToPositionMap = new HashMap<>();
-        currentComparator = new EarliestComparator();
+        currentComparator = new LatestComparator();
         this.doubtHandler = doubtHandler;
         SHOW_MERGED = true;
     }
